@@ -1,7 +1,7 @@
 import { formatDuration, intervalToDuration, parseISO, format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { Navbar, Container, Badge, Button, Nav, Table, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Navbar, Badge, Button, Nav, Table, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { patchType } from "../api/api";
 import { DATA_TYPES } from "../App";
 import { formatDays } from "../shared/util";
@@ -109,73 +109,71 @@ export const Todos = ({
         />
       )}
       <Navbar>
-        <Container >
-          <Row className="p-2 me-auto">
-            <Col style={{ "width": "400px" }}>
-              <Select
-                name="lists"
-                placeholder="All Lists"
-                isClearable
-                options={
-                  filteredLists
-                    .map((list) => ({
-                      value: list.id,
-                      label: list.title
-                    }))
-                }
-                defaultValue={{
-                  value: selectedListId,
-                  label: lists.find((list) => list.id === selectedListId)
-                    ? lists.find((list) => list.id === selectedListId).title
-                    : 'All Lists'
-                }}
-                onChange={(list) => setSelectedListId(list ? list.value : '')}
-              />
-            </Col>
-            <Col>
-              <Button
-                color="info"
-                onClick={() => setEditingTodo({ list: selectedListId })}
-              >
-                Add todo
-              </Button>
-            </Col>
-          </Row>
-          <Nav variant="tabs" className="justify-content-end">
-            <Nav.Item>
-              <Nav.Link
-                className={filteredStatus == "Backlog" ? "active" : ""}
-                onClick={() => setfilteredStatus('Backlog')}
-              >
-                Backlog
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                className={filteredStatus == "Pending" ? "active" : ""}
-                onClick={() => setfilteredStatus('Pending')}
-              >
-                Pending
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                className={filteredStatus == "In Progress" ? "active" : ""}
-                onClick={() => setfilteredStatus('In Progress')}
-              >
-                In Progress
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                className={filteredStatus == "Completed" ? "active" : ""}
-                onClick={() => setfilteredStatus('Completed')}
-              >
-                Completed
-              </Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </Container>
+        <Row className="p-2 me-auto">
+          <Col style={{ "width": "400px" }}>
+            <Select
+              name="lists"
+              placeholder="All Lists"
+              isClearable
+              options={
+                filteredLists
+                  .map((list) => ({
+                    value: list.id,
+                    label: list.title
+                  }))
+              }
+              defaultValue={{
+                value: selectedListId,
+                label: lists.find((list) => list.id === selectedListId)
+                  ? lists.find((list) => list.id === selectedListId).title
+                  : 'All Lists'
+              }}
+              onChange={(list) => setSelectedListId(list ? list.value : '')}
+            />
+          </Col>
+          <Col>
+            <Button
+              color="info"
+              onClick={() => setEditingTodo({ list: selectedListId })}
+            >
+              Add todo
+            </Button>
+          </Col>
+        </Row>
+        <Nav variant="tabs" className="justify-content-end">
+          <Nav.Item>
+            <Nav.Link
+              className={filteredStatus == "Backlog" ? "active" : ""}
+              onClick={() => setfilteredStatus('Backlog')}
+            >
+              Backlog
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link
+              className={filteredStatus == "Pending" ? "active" : ""}
+              onClick={() => setfilteredStatus('Pending')}
+            >
+              Pending
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link
+              className={filteredStatus == "In Progress" ? "active" : ""}
+              onClick={() => setfilteredStatus('In Progress')}
+            >
+              In Progress
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link
+              className={filteredStatus == "Completed" ? "active" : ""}
+              onClick={() => setfilteredStatus('Completed')}
+            >
+              Completed
+            </Nav.Link>
+          </Nav.Item>
+        </Nav>
       </Navbar >
       <Table bordered hover responsive="md" >
         <thead style={{ backgroundColor: "#2D3047", color: "white" }}>

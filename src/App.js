@@ -2,14 +2,16 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Container, Nav, Navbar, Button, Row, Col } from "react-bootstrap";
 import Select from "react-select";
 
-import { getType } from "./api/api";
+import { getType, getCSRFToken } from "./api/api";
 
 import { Lists } from "./lists/Lists";
 import { Tags } from "./tags/Tags";
 import { Todos } from "./todos/Todos";
 import { Wishlist } from "./wishlist/Wishlist";
+import { Login } from "./login/Login";
 
 export const API_ROOT = "https://api.fisheecake.com";
+
 
 /* Enum of data types and their display values 
 This allows us to reference them as DATA_TYPES.[type],
@@ -34,6 +36,7 @@ export const DATA_TYPES = {
 };
 
 export const App = () => {
+
   const [activeDataType, setActiveDataType] = useState(
     DATA_TYPES.TODOS.apiName
   );
@@ -70,6 +73,7 @@ export const App = () => {
     refreshLists();
     refreshTodos();
     refreshWishlist();
+    getCSRFToken();
   }, []);
 
   const viewTodosFromListId = (listId) => {
@@ -157,19 +161,25 @@ export const App = () => {
               >
                 Lists
               </Nav.Link>
+              <Nav.Link
+                key="wishlist"
+                active={"wishlist" === activeDataType}
+                style={{ color: "white", backgroundColor: "#2D3047" }}
+                onClick={() => setActiveDataType("wishlists")}
+              >
+                Wishlist (${availableRewards.toFixed(1)})
+              </Nav.Link>
             </Nav>
             <Navbar.Text
               style={{ color: "white" }}
               className="justify-content-end"
-            >
-              <Button variant="outline-light" onClick={() => setActiveDataType("wishlists")}>
-                Redeem wish (${availableRewards.toFixed(1)})
-              </Button>
+            ><Login />
+
             </Navbar.Text>
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      <Container fluid style={{ padding: "20px 100px 20px" }}>
+      <Container fluid style={{ padding: "20px 100px 20px" }} >
         {["todos", "lists"].includes(activeDataType) &&
           <Row>
             <Col >
@@ -190,8 +200,6 @@ export const App = () => {
               </Button>
             </Col>
           </Row>}
-
-
         {/* We display the appropriate view based on activeDataType*/}
         {views[activeDataType]}
       </Container >
