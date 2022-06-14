@@ -3,6 +3,7 @@ import { API_ROOT } from "../App";
 /* Allows 4xx/5xx errors to be caught by checking response status */
 const fetchWithErrorHandling = (url, args) =>
   fetch(url, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -19,6 +20,17 @@ const fetchWithErrorHandling = (url, args) =>
       throw new Error(JSON.stringify(json, undefined, 2));
     }
   });
+
+export const login = (credentials) => {
+  fetch(`${API_ROOT}/login/`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+    body: JSON.stringify(credentials)
+  }
+  );
+}
 
 export const getType = (type) =>
   fetchWithErrorHandling(`${API_ROOT}/${type.apiName}`);
