@@ -2,13 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Container, Nav, Navbar, Button, Row, Col } from "react-bootstrap";
 import Select from "react-select";
 
-import { getType, getCSRFToken } from "./api/api";
+import { getType } from "./api/api";
 
+import { Login } from "./login/Login";
 import { Lists } from "./lists/Lists";
 import { Tags } from "./tags/Tags";
 import { Todos } from "./todos/Todos";
 import { Wishlist } from "./wishlist/Wishlist";
-import { Login } from "./login/Login";
 
 export const API_ROOT = "https://api.fisheecake.com";
 
@@ -73,7 +73,6 @@ export const App = () => {
     refreshLists();
     refreshTodos();
     refreshWishlist();
-    getCSRFToken();
   }, []);
 
   const viewTodosFromListId = (listId) => {
@@ -173,8 +172,8 @@ export const App = () => {
             <Navbar.Text
               style={{ color: "white" }}
               className="justify-content-end"
-            ><Login />
-
+            ><Login
+              />
             </Navbar.Text>
           </Navbar.Collapse>
         </Container>

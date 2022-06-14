@@ -1,14 +1,11 @@
 import { API_ROOT } from "../App";
 
-
 /* Allows 4xx/5xx errors to be caught by checking response status */
 const fetchWithErrorHandling = (url, args) =>
   fetch(url, {
-    credentials: 'include',
-    mode: 'same-origin',
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": "csrftoken"
     },
     ...args,
   }).then(async (r) => {
@@ -24,26 +21,15 @@ const fetchWithErrorHandling = (url, args) =>
     }
   });
 
-export const getCSRFToken = () => {
-  fetch(`${API_ROOT}/set-csrf`, {
+export const login = (credentials) => {
+  fetch(`${API_ROOT}/login/`, {
     headers: {
       "Content-Type": "application/json",
     },
-    method: "POST"
-  }).then(async (r) => {
-    if (r.ok)
-      console.log(r.json)
-    else {
-      const json = await r.json();
-      throw new Error(JSON.stringify(json, undefined, 2));
-    }
-  })
-}
-export const login = (credentials) => {
-  fetchWithErrorHandling(`${API_ROOT}/login`, {
     method: "POST",
-    body: JSON.stringify(credentials),
-  });
+    body: JSON.stringify(credentials)
+  }
+  );
 }
 
 export const getType = (type) =>

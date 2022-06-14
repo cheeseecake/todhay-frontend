@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import React, { useState } from "react";
 import { FcTodoList, FcClock, FcMoneyTransfer } from "react-icons/fc";
-import { Navbar, Container, Badge, Button, Card, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Navbar, Badge, Button, Card, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { formatDays } from "../shared/util";
 import { ListsModal } from "./ListsModal";
 
@@ -120,15 +120,13 @@ export const Lists = ({
   return (
     <>
       <Navbar>
-        <Container >
-          <Row className="p-2 me-auto" >
-            <Col>
-              <Button color="info" onClick={() => setEditingList({})} >
-                Add list
-              </Button>
-            </Col>
-          </Row>
-        </Container>
+        <Row className="p-2 me-auto" >
+          <Col>
+            <Button color="info" onClick={() => setEditingList({})} >
+              Add list
+            </Button>
+          </Col>
+        </Row>
       </Navbar>
       {editingList && (
         <ListsModal
