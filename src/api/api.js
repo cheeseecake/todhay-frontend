@@ -20,17 +20,14 @@ const fetchWithErrorHandling = (url, args) =>
       throw new Error(JSON.stringify(json, undefined, 2));
     }
   });
-
-export const login = (credentials) => {
-  fetch(`${API_ROOT}/login/`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
+export const getLogin = (credentials) =>
+  fetchWithErrorHandling(`${API_ROOT}/login/`, {
     method: "POST",
-    body: JSON.stringify(credentials)
-  }
-  );
-}
+    body: JSON.stringify(credentials),
+  })
+
+export const getLogout = () =>
+  fetchWithErrorHandling(`${API_ROOT}/logout`);
 
 export const getType = (type) =>
   fetchWithErrorHandling(`${API_ROOT}/${type.apiName}`);

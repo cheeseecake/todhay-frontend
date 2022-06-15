@@ -5,6 +5,7 @@ import Select from "react-select";
 import { getType } from "./api/api";
 
 import { Login } from "./login/Login";
+import { Logout } from "./login/Logout";
 import { Lists } from "./lists/Lists";
 import { Tags } from "./tags/Tags";
 import { Todos } from "./todos/Todos";
@@ -36,6 +37,7 @@ export const DATA_TYPES = {
 };
 
 export const App = () => {
+  const [username, setUsername] = useState(false);
 
   const [activeDataType, setActiveDataType] = useState(
     DATA_TYPES.TODOS.apiName
@@ -172,8 +174,23 @@ export const App = () => {
             <Navbar.Text
               style={{ color: "white" }}
               className="justify-content-end"
-            ><Login
+            >{!username ?
+              <Login
+                refreshWishlist={refreshWishlist}
+                refreshLists={refreshLists}
+                refreshTodos={refreshTodos}
+                refreshTags={refreshTags}
+                setUsername={setUsername}
               />
+              :
+              <Logout
+                setWishlist={setWishlist}
+                setLists={setLists}
+                setTodos={setTodos}
+                setTags={setTags}
+                setUsername={setUsername}
+              />
+              }
             </Navbar.Text>
           </Navbar.Collapse>
         </Container>
