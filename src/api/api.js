@@ -1,11 +1,26 @@
 import { API_ROOT } from "../App";
 
 /* Allows 4xx/5xx errors to be caught by checking response status */
+function getCookie(name) {
+  if (!document.cookie) {
+    return null;
+  }
+  const xsrfCookies = document.cookie.split(';')
+    .map(c => c.trim())
+    .filter(c => c.startsWith(name + '='));
+
+  if (xsrfCookies.length === 0) {
+    return null;
+  }
+  return decodeURIComponent(xsrfCookies[0].split('=')[1]);
+}
+
 const fetchWithErrorHandling = (url, args) =>
   fetch(url, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      'X-Csrftoken': getCookie("csrftoken")
     },
     ...args,
   }).then(async (r) => {
@@ -20,8 +35,11 @@ const fetchWithErrorHandling = (url, args) =>
       throw new Error(JSON.stringify(json, undefined, 2));
     }
   });
+export const getCSRF = () =>
+  fetchWithErrorHandling(`${API_ROOT}/set-csrf`);
+
 export const getLogin = (credentials) =>
-  fetchWithErrorHandling(`${API_ROOT}/login/`, {
+  fetchWithErrorHandling(`${API_ROOT}/login`, {
     method: "POST",
     body: JSON.stringify(credentials),
   })

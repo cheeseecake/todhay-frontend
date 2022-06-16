@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Container, Nav, Navbar, Button, Row, Col } from "react-bootstrap";
 import Select from "react-select";
 
-import { getType } from "./api/api";
+import { getType, getCSRF } from "./api/api";
 
 import { Login } from "./login/Login";
 import { Logout } from "./login/Logout";
@@ -71,6 +71,7 @@ export const App = () => {
   );
 
   useEffect(() => {
+    getCSRF();
     refreshTags();
     refreshLists();
     refreshTodos();
