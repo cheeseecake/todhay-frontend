@@ -6,8 +6,15 @@ import { DATA_TYPES } from "../App";
 import { formatDays } from "../shared/util";
 import { WishlistModal } from "./WishlistModal";
 
-export const Wishlist = ({ availableRewards, refreshWishlist, wishlist, tags }) => {
+export const Wishlist = ({ totalRewards, refreshWishlist, wishlist, tags }) => {
   const [editingWish, setEditingWish] = useState();
+
+  const claimedRewards = wishlist.reduce(
+    (acc, wish) => acc + parseFloat(wish.cost) * parseFloat(wish.count),
+    0
+  );
+
+  const availableRewards = totalRewards - claimedRewards;
 
   const redeemWish = (wish) =>
     updateType({
@@ -35,6 +42,8 @@ export const Wishlist = ({ availableRewards, refreshWishlist, wishlist, tags }) 
       <Col key={wish.id}>
         <Card
           onClick={() => setEditingWish(wish)}
+          text="white"
+          bg="dark"
           style={{
             cursor: "pointer",
           }}
@@ -108,7 +117,19 @@ export const Wishlist = ({ availableRewards, refreshWishlist, wishlist, tags }) 
 
   return (
     <>
-      <Button color="info" onClick={() => setEditingWish({})}>
+      <ProgressBar>
+        <ProgressBar
+          variant="success"
+          now={100 * (availableRewards / totalRewards)}
+          label={`$${availableRewards.toFixed(1)} avail`}
+          key={1} />
+        <ProgressBar
+          style={{ backgroundColor: "#064b35" }}
+          now={100 * (claimedRewards / totalRewards)}
+          label={`$${claimedRewards.toFixed(1)} claimed`}
+          key={2} />
+      </ProgressBar>
+      <Button className="m-4" color="info" onClick={() => setEditingWish({})}>
         Add wish
       </Button>
       <div style={{ padding: "20px" }}>

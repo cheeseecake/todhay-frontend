@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Container, Nav, Navbar, Button, Row, Col } from "react-bootstrap";
-import Select from "react-select";
+import { Container, Nav, Navbar } from "react-bootstrap";
 
 import { getType, getCSRF } from "./api/api";
 
@@ -48,7 +47,6 @@ export const App = () => {
   const [lists, setLists] = useState([]);
   const [todos, setTodos] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
 
   const refreshTags = useCallback(
     () => void getType(DATA_TYPES.TAGS).then((json) => setTags(json)),
@@ -89,15 +87,8 @@ export const App = () => {
     .filter((todo) => !!todo.completed_date)
     .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
 
-  // I'm not sure where 'purchasedate' was previously calculated/derived from,
-  // couldn't find it in the Wishlist model. So I'm assuming
-  // just adding the count X costs of all the wishes should be the claimedRewards
-  const claimedRewards = wishlist.reduce(
-    (acc, wish) => acc + parseFloat(wish.cost) * parseFloat(wish.count),
-    0
-  );
-
-  const availableRewards = totalRewards - claimedRewards;
+  const allRewards = todos
+    .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
 
   const views = {
     [DATA_TYPES.TAGS.apiName]: (
@@ -107,11 +98,13 @@ export const App = () => {
     [DATA_TYPES.TODOS.apiName]: (
       <Todos
         lists={lists}
-        selectedTags={selectedTags}
+        tags={tags}
         refreshTodos={refreshTodos}
         selectedListId={selectedListId}
         setSelectedListId={setSelectedListId}
         todos={todos}
+        totalRewards={totalRewards}
+        allRewards={allRewards}
       />
     ),
 
@@ -120,7 +113,6 @@ export const App = () => {
         lists={lists}
         refreshLists={refreshLists}
         tags={tags}
-        selectedTags={selectedTags}
         todos={todos}
         viewTodosFromListId={viewTodosFromListId}
       />
@@ -128,7 +120,7 @@ export const App = () => {
 
     [DATA_TYPES.WISHLIST.apiName]: (
       <Wishlist
-        availableRewards={availableRewards}
+        totalRewards={totalRewards}
         refreshWishlist={refreshWishlist}
         wishlist={wishlist}
         tags={tags}
@@ -139,37 +131,37 @@ export const App = () => {
   return (
     <div>
       <Navbar
-        style={{ backgroundColor: "#2D3047" }}
+        bg="dark"
         expand="sm"
         variant="dark"
       >
-        <Container fluid style={{ padding: "1px 100px 1px" }}>
+        <Container>
+          <Navbar.Brand key="Todos"
+            style={{ cursor: "pointer" }}
+            active={"todos" === activeDataType}
+            onClick={() => setActiveDataType("todos")}
+          >
+            Todos</Navbar.Brand>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav variant="tabs" className="me-auto">
               <Nav.Link
-                key="Todos"
-                active={"todos" === activeDataType}
-                style={{ color: "white", backgroundColor: "#2D3047" }}
-                onClick={() => setActiveDataType("todos")}
-              >
-                Todos
-              </Nav.Link>
-              <Nav.Link
                 key="Lists"
-                active={"lists" === activeDataType}
-                style={{ color: "white", backgroundColor: "#2D3047" }}
                 onClick={() => setActiveDataType("lists")}
               >
                 Lists
               </Nav.Link>
               <Nav.Link
                 key="wishlist"
-                active={"wishlist" === activeDataType}
-                style={{ color: "white", backgroundColor: "#2D3047" }}
                 onClick={() => setActiveDataType("wishlists")}
               >
-                Wishlist (${availableRewards.toFixed(1)})
+                Wishlist
+              </Nav.Link>
+              <Nav.Link
+                key="Tags"
+                onClick={() => setActiveDataType("tags")}
+              >
+                Tags
               </Nav.Link>
             </Nav>
             <Navbar.Text
@@ -183,6 +175,7 @@ export const App = () => {
                 refreshTags={refreshTags}
                 setUsername={setUsername}
               />
+
               :
               <Logout
                 setWishlist={setWishlist}
@@ -196,27 +189,7 @@ export const App = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      <Container fluid style={{ padding: "20px 100px 20px" }} >
-        {["todos", "lists"].includes(activeDataType) &&
-          <Row>
-            <Col >
-              <Select
-                name="tags"
-                placeholder="All Tags"
-                isMulti
-                options={tags.map((tag) => ({ value: tag.id, label: tag.title }))}
-                onChange={(e) => { setSelectedTags(e.map((tag) => tag.value)) }}
-              />
-            </Col>
-            <Col md="auto">
-              <Button
-                variant="outline-dark"
-                onClick={() => setActiveDataType("tags")}
-              >
-                View tags
-              </Button>
-            </Col>
-          </Row>}
+      <Container>
         {/* We display the appropriate view based on activeDataType*/}
         {views[activeDataType]}
       </Container >

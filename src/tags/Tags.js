@@ -41,7 +41,7 @@ export const Tags = ({ refreshTags, tags, lists, todos }) => {
 
   return (
     <>
-      <Button onClick={() => setEditingTag({})}>
+      <Button className="m-4" onClick={() => setEditingTag({})}>
         Add tag
       </Button>
       <div style={{ padding: "20px" }}>

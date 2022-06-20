@@ -4,17 +4,17 @@ import { FcTodoList, FcClock, FcMoneyTransfer } from "react-icons/fc";
 import { Navbar, Badge, Button, Card, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { formatDays } from "../shared/util";
 import { ListsModal } from "./ListsModal";
+import Select from "react-select";
 
 export const Lists = ({
   lists,
   refreshLists,
-  selectedTags,
   tags,
   todos,
   viewTodosFromListId,
 }) => {
   const [editingList, setEditingList] = useState();
-
+  const [selectedTags, setSelectedTags] = useState([]);
   // Filter list selection by tag if a tag was selected from autocomplete field,
   // or if no tag was selected, filter list based on whether the list is a project (has a due date) or not
   let filteredLists =
@@ -57,11 +57,8 @@ export const Lists = ({
       <Col key={list.id}>
         <Card
           key={list.id}
-          style={{
-            backgroundColor:
-              list.due_date ? "#E0EBF5" :
-                list.completed_date ? "#EFFAF5" : "#E4EFF1",
-          }}
+          text="white"
+          bg="dark"
         >
           <Card.Body
             style={{ cursor: "pointer" }}
@@ -102,7 +99,7 @@ export const Lists = ({
               }
             >
               <Button
-                variant="outline-dark"
+                variant="outline-light"
                 onClick={(e) => {
                   e.stopPropagation();
                   viewTodosFromListId(list.id);
@@ -119,14 +116,23 @@ export const Lists = ({
 
   return (
     <>
+      <Row className="m-4" >
+        <Col >
+          <Select
+            name="tags"
+            placeholder="All Tags"
+            isMulti
+            options={tags.map((tag) => ({ value: tag.id, label: tag.title }))}
+            onChange={(e) => { setSelectedTags(e.map((tag) => tag.value)) }}
+          />
+        </Col>
+        <Col>
+          <Button color="info" onClick={() => setEditingList({})} >
+            Add list
+          </Button>
+        </Col>
+      </Row>
       <Navbar>
-        <Row className="p-2 me-auto" >
-          <Col>
-            <Button color="info" onClick={() => setEditingList({})} >
-              Add list
-            </Button>
-          </Col>
-        </Row>
       </Navbar>
       {editingList && (
         <ListsModal
