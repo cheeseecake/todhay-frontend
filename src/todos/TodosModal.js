@@ -1,16 +1,32 @@
 import { format, parseISO } from "date-fns";
 import React, { useState } from "react";
+import Select from "react-select";
 import { Button, Row, Col, Form, Modal } from "react-bootstrap";
 import { updateType, createType, deleteType } from "../api/api";
 import { DATA_TYPES } from "../App";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+
+const selectStyles = {
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
+  option: (styles, { isFocused, isSelected }) => {
+    return {
+      ...styles,
+      backgroundColor: isFocused
+        ? '#52525E'
+        : isSelected
+          ? '#000000'
+          : '#16191c',
+    }
+  }
+};
 
 const todoSchema = yup.object({
   title: yup.string().required(),
   description: yup.string(),
-  list: yup.string(),
+  project: yup.string(),
+  tags: yup.array().transform((v) => v.map((t) => t.value)),
   effort: yup.number(),
   reward: yup.number(),
   frequency: yup.string()
@@ -50,13 +66,16 @@ const todoSchema = yup.object({
     )
 }).required();
 
-export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
+  const { control, register, handleSubmit, watch, formState: { errors } } = useForm({
     resolver: yupResolver(todoSchema),
     defaultValues: {
       title: todo?.title,
       description: todo?.description,
-      list: todo?.list,
+      project: todo?.project,
+      tags: tags
+        .filter((tag) => todo.tags?.includes(tag.id))
+        .map((tag) => ({ value: tag.id, label: tag.title })),
       effort: todo?.effort || 0.5,
       reward: todo?.reward || 0.5,
       frequency: todo?.frequency,
@@ -68,6 +87,7 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
       completed_date: todo?.completed_date,
     }
   });
+  const watchProject = watch("project");
 
   const [effort, setEffort] = useState(todo?.effort || 0.5);
 
@@ -116,13 +136,13 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>List</Form.Label>
+                <Form.Label>Project</Form.Label>
                 <Form.Select
-                  {...register("list")}
-                  name="list"
-                  defaultValue={todo?.list}
+                  {...register("project")}
+                  name="project"
+                  defaultValue={todo?.project}
                 >
-                  {lists.map((e) => (
+                  {projects.map((e) => (
                     <option key={e.id} value={e.id}>
                       {e.title}
                     </option>
@@ -133,7 +153,7 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
           </Row>
 
           <Row >
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Effort (hrs) - {effort * 60} minutes</Form.Label>
                 <Form.Control
@@ -145,7 +165,7 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
                 <p className="error">{errors.effort?.message}</p>
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Reward ($) - recommended ${effort}</Form.Label>
                 <Form.Control
@@ -156,56 +176,33 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
                 <p className="error">{errors.reward?.message}</p>
               </Form.Group>
             </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Tags</Form.Label>
+                <Controller
+                  disabled={watchProject}
+                  name="tags"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      placeholder="Tags"
+                      closeMenuOnSelect={false}
+                      isMulti
+                      styles={selectStyles}
+                      options={tags.map((tag) => ({
+                        value: tag.id,
+                        label: tag.title,
+                      }))}
+                    />
+                  )}
+                />
+                <p className="error">{errors.tags?.message}</p>
+              </Form.Group>
+            </Col>
           </Row>
+
 
-          <Row >
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Frequency</Form.Label>
-                <Form.Select
-                  {...register("frequency")}
-                  name="frequency"
-                >
-                  <option value={""}>One-time</option>
-                  <option value={"DAILY"}>Daily</option>
-                  <option value={"WEEKLY"}>Weekly</option>
-                  <option value={"MONTHLY"}>Monthly</option>
-                  <option value={"QUATERLY"}>Quarterly</option>
-                  <option value={"YEARLY"}>Yearly</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>End Date</Form.Label>
-                <Form.Control
-                  {...register("end_date")}
-                  type="date"
-                  name="end_date"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Current Streak</Form.Label>
-                <Form.Control
-                  {...register("current_streak")}
-                  type="number"
-                  name="current_streak"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Max Streak</Form.Label>
-                <Form.Control
-                  {...register("max_streak")}
-                  type="number"
-                  name="max_streak"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
           <Row>
             <Form.Group>
               <Form.Label>Description</Form.Label>
@@ -252,6 +249,54 @@ export const TodosModal = ({ lists, refreshTodos, setTodo, todo }) => {
                   name="completed_date"
                 /><p className="error">
                   {errors.completed_date?.message}</p>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row >
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>Frequency</Form.Label>
+                <Form.Select
+                  {...register("frequency")}
+                  name="frequency"
+                >
+                  <option value={""}>One-time</option>
+                  <option value={"DAILY"}>Daily</option>
+                  <option value={"WEEKLY"}>Weekly</option>
+                  <option value={"MONTHLY"}>Monthly</option>
+                  <option value={"QUATERLY"}>Quarterly</option>
+                  <option value={"YEARLY"}>Yearly</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>End Date</Form.Label>
+                <Form.Control
+                  {...register("end_date")}
+                  type="date"
+                  name="end_date"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>Current Streak</Form.Label>
+                <Form.Control
+                  {...register("current_streak")}
+                  type="number"
+                  name="current_streak"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>Max Streak</Form.Label>
+                <Form.Control
+                  {...register("max_streak")}
+                  type="number"
+                  name="max_streak"
+                />
               </Form.Group>
             </Col>
           </Row>

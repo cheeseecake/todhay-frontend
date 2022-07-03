@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Container, Nav, Navbar } from "react-bootstrap";
+import { Container, Nav, Navbar, Button } from "react-bootstrap";
 
-import { getType, getCSRF } from "./api/api";
+import { getType, getCSRF, getLogout } from "./api/api";
 
-import { Login } from "./login/Login";
-import { Logout } from "./login/Logout";
-import { Lists } from "./lists/Lists";
+import { LoginModal } from "./login/LoginModal";
+import { Projects } from "./projects/Projects";
 import { Tags } from "./tags/Tags";
 import { Todos } from "./todos/Todos";
 import { Wishlist } from "./wishlist/Wishlist";
@@ -21,13 +20,13 @@ export const DATA_TYPES = {
     displayName: "Todos",
     apiName: "todos",
   },
-  LISTS: {
-    displayName: "Lists",
-    apiName: "lists",
+  PROJECTS: {
+    displayName: "Projects",
+    apiName: "projects",
   },
   WISHLIST: {
     displayName: "Wishlist",
-    apiName: "wishlists",
+    apiName: "wishlist",
   },
   TAGS: {
     displayName: "Tags",
@@ -36,25 +35,28 @@ export const DATA_TYPES = {
 };
 
 export const App = () => {
-  const [username, setUsername] = useState(false);
 
   const [activeDataType, setActiveDataType] = useState(
-    DATA_TYPES.TODOS.apiName
+    DATA_TYPES.TODOS.displayName
   );
-  const [selectedListId, setSelectedListId] = useState('');
 
   const [tags, setTags] = useState([]);
-  const [lists, setLists] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [todos, setTodos] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  const [loggingIn, setLoggingIn] = useState();
 
   const refreshTags = useCallback(
     () => void getType(DATA_TYPES.TAGS).then((json) => setTags(json)),
     []
   );
 
-  const refreshLists = useCallback(
-    () => void getType(DATA_TYPES.LISTS).then((json) => setLists(json)),
+  const refreshProjects = useCallback(
+    () => void getType(DATA_TYPES.PROJECTS).then((json) => setProjects(json)),
     []
   );
 
@@ -68,127 +70,147 @@ export const App = () => {
     []
   );
 
+  const onLogout = () =>
+    getLogout()
+      .then(() => {
+        setTags([]);
+        setProjects([]);
+        setTodos([]);
+        setWishlist([]);
+      })
+
   useEffect(() => {
     getCSRF();
     refreshTags();
-    refreshLists();
+    refreshProjects();
     refreshTodos();
     refreshWishlist();
   }, []);
 
-  const viewTodosFromListId = (listId) => {
-    setSelectedListId(listId);
-    setActiveDataType(DATA_TYPES.TODOS.apiName);
+  const viewTodosFromProjectId = (projectId) => {
+    setSelectedProjectId(projectId);
+    setActiveDataType("Todos");
   };
-
+  const viewTodosFromTags = (tagId) => {
+    setSelectedTags([tagId]);
+    setActiveDataType("Todos");
+  };
+  const viewProjectsFromTags = (tagId) => {
+    setSelectedTags([tagId]);
+    setActiveDataType("Projects");
+  };
   // totalRewards and claimedRewards will be recalculated every render
   // It's not expensive, hence they're not memoized
   const totalRewards = todos
     .filter((todo) => !!todo.completed_date)
     .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
 
-  const allRewards = todos
-    .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
-
   const views = {
-    [DATA_TYPES.TAGS.apiName]: (
-      <Tags lists={lists} todos={todos} refreshTags={refreshTags} tags={tags} />
+    [DATA_TYPES.TAGS.displayName]: (
+      <Tags
+        tags={tags}
+        projects={projects}
+        todos={todos}
+        refreshTags={refreshTags}
+        viewTodosFromTags={viewTodosFromTags}
+        viewProjectsFromTags={viewProjectsFromTags}
+      />
     ),
 
-    [DATA_TYPES.TODOS.apiName]: (
+    [DATA_TYPES.TODOS.displayName]: (
       <Todos
-        lists={lists}
+        todos={todos}
+        projects={projects}
         tags={tags}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+        selectedProjectId={selectedProjectId}
+        setSelectedProjectId={setSelectedProjectId}
         refreshTodos={refreshTodos}
-        selectedListId={selectedListId}
-        setSelectedListId={setSelectedListId}
-        todos={todos}
-        totalRewards={totalRewards}
-        allRewards={allRewards}
       />
     ),
 
-    [DATA_TYPES.LISTS.apiName]: (
-      <Lists
-        lists={lists}
-        refreshLists={refreshLists}
+    [DATA_TYPES.PROJECTS.displayName]: (
+      <Projects
+        projects={projects}
         tags={tags}
         todos={todos}
-        viewTodosFromListId={viewTodosFromListId}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+        refreshProjects={refreshProjects}
+        viewTodosFromProjectId={viewTodosFromProjectId}
       />
     ),
 
-    [DATA_TYPES.WISHLIST.apiName]: (
+    [DATA_TYPES.WISHLIST.displayName]: (
       <Wishlist
         totalRewards={totalRewards}
         refreshWishlist={refreshWishlist}
         wishlist={wishlist}
-        tags={tags}
       />
     ),
   };
 
   return (
     <div>
+      {loggingIn && (
+        <LoginModal
+          refreshWishlist={refreshWishlist}
+          refreshProjects={refreshProjects}
+          refreshTodos={refreshTodos}
+          refreshTags={refreshTags}
+          setLoggingIn={setLoggingIn}
+        />)}
       <Navbar
         bg="dark"
-        expand="sm"
         variant="dark"
       >
         <Container>
-          <Navbar.Brand key="Todos"
-            style={{ cursor: "pointer" }}
-            active={"todos" === activeDataType}
-            onClick={() => setActiveDataType("todos")}
-          >
-            Todos</Navbar.Brand>
-          <Navbar.Toggle aria-controls="navbarScroll" />
-          <Navbar.Collapse id="navbarScroll">
-            <Nav variant="tabs" className="me-auto">
-              <Nav.Link
-                key="Lists"
-                onClick={() => setActiveDataType("lists")}
-              >
-                Lists
-              </Nav.Link>
-              <Nav.Link
-                key="wishlist"
-                onClick={() => setActiveDataType("wishlists")}
-              >
-                Wishlist
-              </Nav.Link>
-              <Nav.Link
-                key="Tags"
-                onClick={() => setActiveDataType("tags")}
-              >
-                Tags
-              </Nav.Link>
-            </Nav>
-            <Navbar.Text
-              style={{ color: "white" }}
-              className="justify-content-end"
-            >{!username ?
-              <Login
-                refreshWishlist={refreshWishlist}
-                refreshLists={refreshLists}
-                refreshTodos={refreshTodos}
-                refreshTags={refreshTags}
-                setUsername={setUsername}
-              />
-
-              :
-              <Logout
-                setWishlist={setWishlist}
-                setLists={setLists}
-                setTodos={setTodos}
-                setTags={setTags}
-                setUsername={setUsername}
-              />
-              }
-            </Navbar.Text>
-          </Navbar.Collapse>
+          <Nav variant="tabs" className="me-auto">
+            <Nav.Link
+              key="Todos"
+              className={activeDataType == "Todos" ? "active" : ""}
+              onClick={() => setActiveDataType("Todos")}
+            >
+              Todos
+            </Nav.Link>
+            <Nav.Link
+              key="Projects"
+              className={activeDataType == "Projects" ? "active" : ""}
+              onClick={() => setActiveDataType("Projects")}
+            >
+              Projects
+            </Nav.Link>
+            <Nav.Link
+              key="Wishlist"
+              className={activeDataType == "Wishlist" ? "active" : ""}
+              onClick={() => setActiveDataType("Wishlist")}
+            >
+              Wishlist
+            </Nav.Link>
+            <Nav.Link
+              key="Tags"
+              className={activeDataType == "Tags" ? "active" : ""}
+              onClick={() => setActiveDataType("Tags")}
+            >
+              Tags
+            </Nav.Link>
+          </Nav>
+          <Navbar.Text
+            style={{ color: "white" }}
+            className="justify-content-end"
+          >{todos.length > 0 ?
+            <Button variant="outline-light" onClick={onLogout} >
+              Logout
+            </Button >
+            :
+            <Button onClick={() => setLoggingIn(true)} >
+              Login
+            </Button>
+            }
+          </Navbar.Text>
         </Container>
-      </Navbar>
+      </Navbar >
       <Container>
         {/* We display the appropriate view based on activeDataType*/}
         {views[activeDataType]}

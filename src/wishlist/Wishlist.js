@@ -1,12 +1,12 @@
 import { format } from "date-fns";
 import React, { useState } from "react";
-import { Button, Card, Row, Col, ProgressBar, Badge, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Button, Card, Row, Col, ProgressBar, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { updateType } from "../api/api";
 import { DATA_TYPES } from "../App";
 import { formatDays } from "../shared/util";
 import { WishlistModal } from "./WishlistModal";
 
-export const Wishlist = ({ totalRewards, refreshWishlist, wishlist, tags }) => {
+export const Wishlist = ({ totalRewards, refreshWishlist, wishlist }) => {
   const [editingWish, setEditingWish] = useState();
 
   const claimedRewards = wishlist.reduce(
@@ -73,16 +73,6 @@ export const Wishlist = ({ totalRewards, refreshWishlist, wishlist, tags }) => {
                 && `Purchased ${formatDays(wish.last_purchased_date)}`
               }
             </Card.Subtitle>
-            <Card.Text>
-              {wish.tags.map(id => (
-                <Badge pill key={id}
-                  bg={tags.find(tag => tag.id === id).topic ? "secondary" : "light"}
-                  text={tags.find(tag => tag.id === id).topic ? "light" : "dark"}
-                  style={{ margin: '5px 5px 5px 0' }}>
-                  {tags.find(tag => tag.id === id).title}
-                </Badge>
-              ))}
-            </Card.Text>
           </Card.Body>
           <Card.Footer>
             {isWishRedeemable &&
@@ -117,7 +107,17 @@ export const Wishlist = ({ totalRewards, refreshWishlist, wishlist, tags }) => {
 
   return (
     <>
-      <ProgressBar>
+      {editingWish && (
+        <WishlistModal
+          wish={editingWish}
+          setWish={setEditingWish}
+          refreshWishlist={refreshWishlist}
+        />
+      )}
+      <Button className="my-4" onClick={() => setEditingWish({})}>
+        New wish
+      </Button>
+      <ProgressBar className="my-2">
         <ProgressBar
           variant="success"
           now={100 * (availableRewards / totalRewards)}
@@ -129,18 +129,9 @@ export const Wishlist = ({ totalRewards, refreshWishlist, wishlist, tags }) => {
           label={`$${claimedRewards.toFixed(1)} claimed`}
           key={2} />
       </ProgressBar>
-      <Button className="m-4" color="info" onClick={() => setEditingWish({})}>
-        Add wish
-      </Button>
+
       <div style={{ padding: "20px" }}>
-        {editingWish && (
-          <WishlistModal
-            wish={editingWish}
-            setWish={setEditingWish}
-            refreshWishlist={refreshWishlist}
-            tags={tags}
-          />
-        )}
+
         <Row xs={1} md={3} lg={5} className="g-3">
           {cards}
         </Row>

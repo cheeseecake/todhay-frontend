@@ -8,7 +8,21 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-const listSchema = yup
+const selectStyles = {
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
+  option: (styles, { isFocused, isSelected }) => {
+    return {
+      ...styles,
+      backgroundColor: isFocused
+        ? '#52525E'
+        : isSelected
+          ? '#000000'
+          : '#16191c',
+    }
+  }
+};
+
+const projectSchema = yup
   .object({
     title: yup.string().required(),
     tags: yup.array().transform((v) => v.map((t) => t.value)),
@@ -43,56 +57,56 @@ const listSchema = yup
   })
   .required();
 
-export const ListsModal = ({ list, setList, tags, refreshLists }) => {
+export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => {
   const {
     control,
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(listSchema),
+    resolver: yupResolver(projectSchema),
     defaultValues: {
-      title: list?.title,
+      title: project?.title,
       tags: tags
-        .filter((tag) => list.tags?.includes(tag.id))
+        .filter((tag) => project.tags?.includes(tag.id))
         .map((tag) => ({ value: tag.id, label: tag.title })),
-      description: list?.description,
+      description: project?.description,
 
       // If a created list didn't have a start_date, show nothing, else if
       // it's a new list (i.e. list is null) then show today's data by default
-      start_date: list ? list.start_date : format(new Date(), "yyyy-MM-dd"),
+      start_date: project ? project.start_date : format(new Date(), "yyyy-MM-dd"),
 
-      due_date: list?.due_date,
-      completed_date: list?.completed_date,
+      due_date: project?.due_date,
+      completed_date: project?.completed_date,
     },
   });
 
   const onDelete = () =>
-    window.confirm(`Delete '${list.title}?'`) &&
-    deleteType(list, DATA_TYPES.LISTS).then(() => {
-      refreshLists();
-      setList(null);
+    window.confirm(`Delete '${project.title}?'`) &&
+    deleteType(project, DATA_TYPES.PROJECTS).then(() => {
+      refreshProjects();
+      setProject(null);
     });
 
   const onSubmit = (data) => {
-    const id = list?.id;
+    const id = project?.id;
 
     const operation = id
-      ? updateType({ id, ...data }, DATA_TYPES.LISTS) // Existing list
-      : createType(data, DATA_TYPES.LISTS); // New list
+      ? updateType({ id, ...data }, DATA_TYPES.PROJECTS) // Existing list
+      : createType(data, DATA_TYPES.PROJECTS); // New list
 
     operation
       .then(() => {
-        refreshLists();
-        setList(null);
+        refreshProjects();
+        setProject(null);
       })
       .catch(alert);
   };
 
   return (
-    <Modal show onHide={() => setList(null)} size="lg" backdrop="static">
+    <Modal show onHide={() => setProject(null)} size="lg" backdrop="static">
       <Modal.Header closeButton>
-        /{DATA_TYPES.LISTS.apiName}/{list.id || "<New List>"}
+        /{DATA_TYPES.PROJECTS.apiName}/{project.id || "<New Project>"}
       </Modal.Header>
       <Modal.Body>
         <Form>
@@ -122,6 +136,7 @@ export const ListsModal = ({ list, setList, tags, refreshLists }) => {
                       placeholder="Tags"
                       closeMenuOnSelect={false}
                       isMulti
+                      styles={selectStyles}
                       options={tags.map((tag) => ({
                         value: tag.id,
                         label: tag.title,

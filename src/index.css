@@ -9,19 +9,7 @@ body {
   line-height: 1.5;
   color: white;
   text-align: left;
-  background-color: #343a40;
-}
-
-.btn-primary {
-  color: #fff;
-  background-color: #1c5797;
-  border-color: #1c5797;
-}
-
-.btn-primary:hover {
-  color: #fff;
-  background-color: #174c85;
-  border-color: #174c85;
+  background-color: #023950;
 }
 
 .nav-tabs {
@@ -43,25 +31,25 @@ body {
 }
 
 .modal-content {
-  background-color: #343a40;
+  background-color: #212529;
 }
 
-.table {
-  color: #fff;
+.form-control {
+  color: white;
   background-color: #16191c;
 }
 
-.table th,
-.table td,
-.table thead th {
-  border-color: #454d55;
-  color: rgba(255, 255, 255, 0.75);
+.form-select {
+  color: white;
+  background-color: #16191c;
 }
 
-.table-hover tbody tr:hover td,
-.table-hover tbody tr:hover th {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.075);
+.form-control:focus {
+  color: rgb(255, 255, 255);
+  background-color: #000000;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .streak {
@@ -92,18 +80,7 @@ body {
   text-align: left;
 }
 
-.form-control {
-  color: white;
-  background-color: #303438;
-}
 
-.form-control:focus {
-  color: rgb(255, 255, 255);
-  background-color: #303438;
-  border-color: #80bdff;
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
 
 .progress {
   margin-top: 10px;
@@ -115,7 +92,6 @@ body {
   background-color: #e9ecef;
   border-radius: 0.25rem;
 }
-
 
 @media (prefers-reduced-motion: reduce) {
   .progress-bar {

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import React from "react";
+import { FcClock, FcMoneyTransfer } from "react-icons/fc";
 import { Button, Card, Row, Col } from "react-bootstrap";
 import { TagsModal } from "./TagsModal";
 
-export const Tags = ({ refreshTags, tags, lists, todos }) => {
+export const Tags = ({ tags, projects, todos, refreshTags, viewProjectsFromTags, viewTodosFromTags }) => {
   const [editingTag, setEditingTag] = useState();
 
   // Sort tags by topic, title
@@ -14,25 +15,45 @@ export const Tags = ({ refreshTags, tags, lists, todos }) => {
   );
 
   const cards = tags.map((tag) => {
-    const listsWithTag = lists.filter((list) => list.tags.includes(tag.id));
-    const numLists = listsWithTag.length;
-    const numPendingTodos = todos.filter((todo) =>
-      !todo.completed_date && listsWithTag.map((list) => list.id).includes(todo.list)
-    ).length;
+    const projectsWithTag = projects.filter((project) => project.tags.includes(tag.id));
+    const numProjects = projectsWithTag.length;
+
+    const todosWithTag = todos.filter((todo) => todo.tags.includes(tag.id));
+    const numTodos = todosWithTag.length;
+    const totalRewards = todosWithTag.reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
+    const totalEffort = todosWithTag.reduce((acc, todo) => acc + parseFloat(todo.effort), 0);
+
+    // const numPendingTodos = todos.filter((todo) =>
+    //   !todo.completed_date && projectsWithTag.map((project) => project.id).includes(todo.project)
+    // ).length;
 
     return (
       <Col key={tag.id}>
         <Card
           onClick={() => setEditingTag(tag)}
-          bg={tag.topic ? "secondary" : "light"}
-          text={tag.topic ? "light" : "dark"}
+          bg="dark"
+          text="white"
           style={{ cursor: "pointer" }}
         >
           <Card.Body>
-            <Card.Title tag="h5">{tag.title}</Card.Title>
+            <Card.Header as="h5">{tag.title}</Card.Header>
             <Card.Text>
-              {numLists} list{numLists !== 1 && 's'} ({numPendingTodos} todo{numPendingTodos !== 1 && 's'})
+              <FcMoneyTransfer /> ${totalRewards.toFixed(1)}{" "}
+
+              <FcClock /> {totalEffort.toFixed(1)} hrs
             </Card.Text>
+            <Row>
+              <Col>
+                <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewTodosFromTags(tag.id)}>
+                  {numTodos} Todo{numTodos !== 1 && 's'}
+                </Button>
+              </Col>
+              <Col>
+                <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewProjectsFromTags(tag.id)}>
+                  {numProjects} Project{numProjects !== 1 && 's'}
+                </Button>
+              </Col>
+            </Row>
           </Card.Body>
         </Card>
       </Col>
@@ -41,18 +62,18 @@ export const Tags = ({ refreshTags, tags, lists, todos }) => {
 
   return (
     <>
-      <Button className="m-4" onClick={() => setEditingTag({})}>
-        Add tag
+      <Button className="my-4" onClick={() => setEditingTag({})}>
+        New tag
       </Button>
+      {editingTag && (
+        <TagsModal
+          tag={editingTag}
+          setTag={setEditingTag}
+          refreshTags={refreshTags}
+        />
+      )}
       <div style={{ padding: "20px" }}>
-        {editingTag && (
-          <TagsModal
-            tag={editingTag}
-            setTag={setEditingTag}
-            refreshTags={refreshTags}
-          />
-        )}
-        <Row xs={2} md={3} lg={5} className="g-3">
+        <Row xs={1} md={3} lg={3} className="g-3">
           {cards}
         </Row>
       </div>
