@@ -39,19 +39,22 @@ export const Tags = ({ tags, projects, todos, refreshTags, viewProjectsFromTags,
             <Card.Header as="h5">{tag.title}</Card.Header>
             <Card.Text>
               <FcMoneyTransfer /> ${totalRewards.toFixed(1)}{" "}
-
               <FcClock /> {totalEffort.toFixed(1)} hrs
             </Card.Text>
             <Row>
               <Col>
-                <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewTodosFromTags(tag.id)}>
-                  {numTodos} Todo{numTodos !== 1 && 's'}
-                </Button>
+                {numTodos > 0 &&
+                  <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewTodosFromTags(tag.id)}>
+                    {numTodos} Todo{numTodos !== 1 && 's'}
+                  </Button>
+                }
               </Col>
               <Col>
-                <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewProjectsFromTags(tag.id)}>
-                  {numProjects} Project{numProjects !== 1 && 's'}
-                </Button>
+                {numProjects > 0 &&
+                  <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewProjectsFromTags(tag.id)}>
+                    {numProjects} Project{numProjects !== 1 && 's'}
+                  </Button>
+                }
               </Col>
             </Row>
           </Card.Body>
@@ -73,7 +76,7 @@ export const Tags = ({ tags, projects, todos, refreshTags, viewProjectsFromTags,
         />
       )}
       <div style={{ padding: "20px" }}>
-        <Row xs={1} md={3} lg={3} className="g-3">
+        <Row xs={1} md={2} lg={3} className="g-3">
           {cards}
         </Row>
       </div>

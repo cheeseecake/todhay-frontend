@@ -9,7 +9,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c', color: "white" }),
+  multiValueLabel: (styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  multiValueRemove:(styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
   option: (styles, { isFocused, isSelected }) => {
     return {
       ...styles,
@@ -111,7 +113,7 @@ export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => 
       <Modal.Body>
         <Form>
           <Row>
-            <Col md={6}>
+            <Col xs={6}>
               <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control
@@ -124,7 +126,7 @@ export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => 
                 />
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col xs={6}>
               <Form.Group>
                 <Form.Label>Tags</Form.Label>
                 <Controller
@@ -159,7 +161,7 @@ export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => 
             />
           </Form.Group>
           <Row>
-            <Col md={4}>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Start Date</Form.Label>
                 <Form.Control
@@ -171,7 +173,7 @@ export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => 
                 <p className="error">{errors.start_date?.message}</p>
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Due Date</Form.Label>
                 <Form.Control
@@ -182,7 +184,7 @@ export const ProjectModal = ({ project, setProject, tags, refreshProjects }) => 
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Completed Date</Form.Label>
                 <Form.Control

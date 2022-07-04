@@ -63,7 +63,7 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
       <Modal.Body>
         <Form>
           <Row>
-            <Col md={12}>
+            <Col xs={8}>
               <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control
@@ -75,10 +75,7 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
                 />
               </Form.Group>
             </Col>
-          </Row>
-
-          <Row>
-            <Col md={4}>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Cost ($)</Form.Label>
                 <Form.Control
@@ -90,7 +87,33 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
                 <p className="error">{errors.cost?.message}</p>
               </Form.Group>
             </Col>
-            <Col md={2}>
+          </Row>
+          <Row>
+            <Col xs={6}>
+              <Form.Group>
+                <Form.Label>Image URL</Form.Label>
+                <Form.Control
+                  {...register("img_url")}
+                  type="text"
+                  name="img_url"
+                />
+                <p className="error">{errors.img_url?.message}</p>
+              </Form.Group>
+            </Col>
+            <Col xs={6}>
+              <Form.Group>
+                <Form.Label>Product URL</Form.Label>
+                <Form.Control
+                  {...register("product_url")}
+                  type="text"
+                  name="product_url"
+                />
+                <p className="error">{errors.product_url?.message}</p>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs={3}>
               <Form.Group>
                 <Form.Label>Repeat?</Form.Label>
                 <Form.Select
@@ -102,7 +125,7 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={2}>
+            <Col xs={3}>
               <Form.Group>
                 <Form.Label>Count</Form.Label>
                 <Form.Control
@@ -113,9 +136,9 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col xs={6}>
               <Form.Group>
-                <Form.Label>Last Purchased Date</Form.Label>
+                <Form.Label>Purchase Date</Form.Label>
                 <Form.Control
                   {...register("last_purchased_date")}
                   type="date"
@@ -124,27 +147,6 @@ export const WishlistModal = ({ refreshWishlist, setWish, wish }) => {
               </Form.Group>
             </Col>
           </Row>
-
-          <Form.Group>
-            <Form.Label>Image URL</Form.Label>
-            <Form.Control
-              {...register("img_url")}
-              type="text"
-              name="img_url"
-            />
-            <p className="error">{errors.img_url?.message}</p>
-          </Form.Group>
-
-          <Form.Group>
-            <Form.Label>Product URL</Form.Label>
-            <Form.Control
-              {...register("product_url")}
-              type="text"
-              name="product_url"
-            />
-            <p className="error">{errors.product_url?.message}</p>
-          </Form.Group>
-
         </Form>
       </Modal.Body>
       <Modal.Footer>

@@ -1,13 +1,15 @@
 import { format, parseISO } from "date-fns";
 import React, { useState } from "react";
 import { FcTodoList, FcClock, FcMoneyTransfer } from "react-icons/fc";
-import { Badge, Button, Card, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { ProgressBar, Badge, Button, Card, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { formatDays } from "../shared/util";
 import { ProjectModal } from "./ProjectModal";
 import Select from "react-select";
 
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c', color: "white" }),
+  multiValueLabel: (styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  multiValueRemove:(styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
   option: (styles, { isFocused, isSelected }) => {
     return {
       ...styles,
@@ -83,7 +85,16 @@ export const Projects = ({
             style={{ cursor: "pointer" }}
             onClick={() => setEditingProject(project)}
           >
-            <Card.Title tag="h5">{project.title}</Card.Title>
+            <Card.Title tag="h5">{project.title}{" - "}
+              {project.tags.map(id => (
+                <Badge pill key={id}
+                  bg="dark"
+                  text="light"
+                  style={{ fontSize: "60%" }}>
+                  {tags.find(tag => tag.id === id).title}
+                </Badge>
+              ))}
+            </Card.Title>
             <Card.Subtitle className="subtitle">
               {project.due_date
                 && `Due ${formatDays(project.due_date)} (${format(
@@ -92,23 +103,18 @@ export const Projects = ({
                 )})`
               }
             </Card.Subtitle>
-            <Card.Text>
-              <FcTodoList /> {totalCompletedTodos.length}/ {todos.length} todos completed
-              <br></br>
-              <FcMoneyTransfer />${totalCompletedRewards.toFixed(1)}/${(totalCompletedRewards + totalPendingRewards).toFixed(1)} earned
-              <br></br>
-              <FcClock /> {totalCompletedEffort.toFixed(1)}/${(totalCompletedEffort + totalPendingEffort).toFixed(1)} hrs invested
-            </Card.Text>
-            <Card.Text>
-              {project.tags.map(id => (
-                <Badge pill key={id}
-                  bg="dark"
-                  text="white"
-                  style={{ margin: '5px 5px 5px 0' }}>
-                  {tags.find(tag => tag.id === id).title}
-                </Badge>
-              ))}
-            </Card.Text>
+            <FcTodoList /><span> {totalCompletedTodos.length}/{todos.length} todos completed</span>
+            <ProgressBar
+              variant="success"
+              now={100 * totalCompletedTodos.length / todos.length} />
+            <FcMoneyTransfer /><span> ${totalCompletedRewards.toFixed(1)}/{(totalCompletedRewards + totalPendingRewards).toFixed(1)} earned</span>
+            <ProgressBar
+              variant="success"
+              now={100 * totalCompletedRewards.length / (totalCompletedRewards + totalPendingRewards)} />
+            <FcClock /><span> {totalCompletedEffort.toFixed(1)}/{(totalCompletedEffort + totalPendingEffort).toFixed(1)} hrs invested</span>
+            <ProgressBar
+              variant="success"
+              now={100 * totalCompletedEffort / (totalCompletedEffort + totalPendingEffort)} />
           </Card.Body>
           <Card.Footer>
             <OverlayTrigger
@@ -164,7 +170,7 @@ export const Projects = ({
           />
         </Col>
       </Row>
-      <Row xs={1} md={3} lg={3} className="g-3">
+      <Row xs={1} md={2} lg={3} className="g-3">
         {cards}
       </Row>
     </>

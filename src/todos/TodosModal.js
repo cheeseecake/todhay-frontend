@@ -9,8 +9,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
-  option: (styles, { isFocused, isSelected }) => {
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c', color: "white" }),
+  multiValueLabel: (styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  multiValueRemove:(styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  option: (styles, { isFocused, isSelected, isDisabled }) => {
     return {
       ...styles,
       backgroundColor: isFocused
@@ -18,6 +20,9 @@ const selectStyles = {
         : isSelected
           ? '#000000'
           : '#16191c',
+      color: isDisabled 
+      ? "black":
+      "white",
     }
   }
 };
@@ -67,7 +72,7 @@ const todoSchema = yup.object({
 }).required();
 
 export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
-  const { control, register, handleSubmit, watch, formState: { errors } } = useForm({
+  const { control, register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(todoSchema),
     defaultValues: {
       title: todo?.title,
@@ -80,20 +85,19 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
       reward: todo?.reward || 0.5,
       frequency: todo?.frequency,
       end_date: todo?.end_date,
-      current_streak: todo?.current_streak || 0,
-      max_streak: todo?.max_streak || 0,
       start_date: todo ? todo.start_date : format(new Date(), "yyyy-MM-dd"),
       due_date: todo?.due_date,
       completed_date: todo?.completed_date,
     }
   });
-  const watchProject = watch("project");
 
   const [effort, setEffort] = useState(todo?.effort || 0.5);
 
   const onSubmit = (data) => {
     const id = todo?.id;
-
+    data.tags = data.project
+      ? projects.filter((project) => project.id === data.project).map(project => project.tags)
+      : data.tags
     const operation = id
       ? updateType({ id, ...data }, DATA_TYPES.TODOS) // Existing todo
       : createType(data, DATA_TYPES.TODOS); // New todo
@@ -121,7 +125,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
       <Modal.Body>
         <Form>
           <Row>
-            <Col md={8}>
+            <Col xs={12}>
               <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control
@@ -134,13 +138,14 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+          </Row>
+          <Row>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
                 <Form.Select
                   {...register("project")}
                   name="project"
-                  defaultValue={todo?.project}
                 >
                   {projects.map((e) => (
                     <option key={e.id} value={e.id}>
@@ -150,12 +155,34 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 </Form.Select >
               </Form.Group>
             </Col>
+              <Col xs={8}>
+                <Form.Group>
+                  <Form.Label>Tags</Form.Label>
+                  <Controller
+                    name="tags"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        placeholder="Tags"
+                        isSearchable={false}
+                        isMulti
+                        styles={selectStyles}
+                        options={tags.map((tag) => ({
+                          value: tag.id,
+                          label: tag.title,
+                        }))}
+                        />
+                      )}
+                      />
+                  <p className="error">{errors.tags?.message}</p>
+                </Form.Group>
+              </Col>
           </Row>
-
           <Row >
-            <Col md={4}>
+            <Col xs={3}>
               <Form.Group>
-                <Form.Label>Effort (hrs) - {effort * 60} minutes</Form.Label>
+                <Form.Label>Effort (hrs) - {effort * 60} min</Form.Label>
                 <Form.Control
                   {...register("effort")}
                   type="integer"
@@ -165,9 +192,9 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 <p className="error">{errors.effort?.message}</p>
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col xs={3}>
               <Form.Group>
-                <Form.Label>Reward ($) - recommended ${effort}</Form.Label>
+                <Form.Label>Reward ($) - ${effort}</Form.Label>
                 <Form.Control
                   {...register("reward")}
                   type="integer"
@@ -176,84 +203,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 <p className="error">{errors.reward?.message}</p>
               </Form.Group>
             </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Tags</Form.Label>
-                <Controller
-                  disabled={watchProject}
-                  name="tags"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      placeholder="Tags"
-                      closeMenuOnSelect={false}
-                      isMulti
-                      styles={selectStyles}
-                      options={tags.map((tag) => ({
-                        value: tag.id,
-                        label: tag.title,
-                      }))}
-                    />
-                  )}
-                />
-                <p className="error">{errors.tags?.message}</p>
-              </Form.Group>
-            </Col>
-          </Row>
-
-
-          <Row>
-            <Form.Group>
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                {...register("description")}
-                style={{ height: "150px" }}
-                as="textarea"
-                id="description"
-                name="description"
-                placeholder="Description"
-              />
-            </Form.Group>
-          </Row>
-          <Row>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Start Date</Form.Label>
-                <Form.Control
-                  {...register("start_date")}
-                  type="date"
-                  id="start_date"
-                  name="start_date"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Due Date</Form.Label>
-                <Form.Control
-                  {...register("due_date")}
-                  type="date"
-                  id="due_date"
-                  name="due_date"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Completed Date</Form.Label>
-                <Form.Control
-                  {...register("completed_date")}
-                  type="date"
-                  id="completed_date"
-                  name="completed_date"
-                /><p className="error">
-                  {errors.completed_date?.message}</p>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row >
-            <Col md={3}>
+            <Col xs={3}>
               <Form.Group>
                 <Form.Label>Frequency</Form.Label>
                 <Form.Select
@@ -269,7 +219,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={3}>
+            <Col xs={3}>
               <Form.Group>
                 <Form.Label>End Date</Form.Label>
                 <Form.Control
@@ -279,24 +229,53 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={3}>
+          </Row>
+          <Row>
+            <Form.Group>
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                {...register("description")}
+                style={{ height: "150px" }}
+                as="textarea"
+                id="description"
+                name="description"
+                placeholder="Description"
+              />
+            </Form.Group>
+          </Row>
+          <Row>
+            <Col xs={4}>
               <Form.Group>
-                <Form.Label>Current Streak</Form.Label>
+                <Form.Label>Start Date</Form.Label>
                 <Form.Control
-                  {...register("current_streak")}
-                  type="number"
-                  name="current_streak"
+                  {...register("start_date")}
+                  type="date"
+                  id="start_date"
+                  name="start_date"
                 />
               </Form.Group>
             </Col>
-            <Col md={3}>
+            <Col xs={4}>
               <Form.Group>
-                <Form.Label>Max Streak</Form.Label>
+                <Form.Label>Due Date</Form.Label>
                 <Form.Control
-                  {...register("max_streak")}
-                  type="number"
-                  name="max_streak"
+                  {...register("due_date")}
+                  type="date"
+                  id="due_date"
+                  name="due_date"
                 />
+              </Form.Group>
+            </Col>
+            <Col xs={4}>
+              <Form.Group>
+                <Form.Label>Completed Date</Form.Label>
+                <Form.Control
+                  {...register("completed_date")}
+                  type="date"
+                  id="completed_date"
+                  name="completed_date"
+                /><p className="error">
+                  {errors.completed_date?.message}</p>
               </Form.Group>
             </Col>
           </Row>
@@ -310,6 +289,6 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
           Save
         </Button>
       </Modal.Footer>
-    </Modal>
+    </Modal >
   );
 };

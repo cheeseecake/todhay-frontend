@@ -6,9 +6,12 @@ import { patchType } from "../api/api";
 import { DATA_TYPES } from "../App";
 import { formatDays } from "../shared/util";
 import { TodosModal } from "./TodosModal";
-
+import { formatDistanceStrict } from "date-fns";
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#16191c' }),
+  control: (styles) => ({ ...styles, backgroundColor: '#16191c', color: "white" }),
+  multiValueLabel: (styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  multiValueRemove:(styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  singleValue: (styles) => ({...styles, color: 'white'}),
   option: (styles, { isFocused, isSelected }) => {
     return {
       ...styles,
@@ -16,11 +19,10 @@ const selectStyles = {
         ? '#52525E'
         : isSelected
           ? '#000000'
-          : '#16191c',
+          : '#16191c'
     }
   }
 };
-
 export const Todos = ({
   todos,
   projects,
@@ -134,12 +136,18 @@ export const Todos = ({
     (currentPage + 1) * pageSize
   ).map((todo) => {
 
-    const formattedStartDate = todo.start_date
-      ? formatDays(todo.start_date)
-      : "";
-    const formattedDueDate = todo.due_date
+    const formattedStartDueComplete = todo.completed_date
+      ? formatDistanceStrict  (
+        parseISO(todo.completed_date),
+        parseISO(todo.start_date),
+        { roundingMethod: "ceil", unit: 'day' }
+      )
+      : !todo.start_date
+      ? ""
+      : new Date() > parseISO(todo.start_date)
       ? formatDays(todo.due_date)
-      : "";
+      : formatDays(todo.start_date);
+
     const isOverdue = new Date() > parseISO(todo.due_date);
 
     return (
@@ -172,33 +180,29 @@ export const Todos = ({
             className="subtitle">
             {projects.find((project) => project.id === todo.project)?.title}{" "}
           </span>
-          {!todo.completed_date && todo.frequency &&
+          {todo.frequency &&
             <Badge bg="dark" text="light">
-              {todo.frequency}{" "}
-              <span
-                className="streak">
-                {todo.current_streak}/{todo.max_streak}
-              </span>
+              {todo.frequency}
             </Badge>
           }
-        </td>
-        <td>
-          {todo.start_date
-            ? format(parseISO(todo.start_date), "d MMM")
-            : "None"}{" - "}
-          {!todo.completed_date &&
-            <b style={{ fontSize: "80%" }}>
-              {formattedStartDate}
-            </b>
+          </td>
+          {!todo.completed_date && 
+          <td>${todo.reward} for 
+          {parseFloat(todo.effort) > 1
+          ? <span> {todo.effort} hrs</span>
+          : <span> {todo.effort * 60} min</span>
           }
-        </td>
-        <td>
-          {todo.due_date
-            ? format(parseISO(todo.due_date), "d MMM")
-            : "None"}{" - "}
-          {!todo.completed_date &&
-            <b style={{ fontSize: "80%", color: isOverdue ? "#d15c38" : "white" }}>
-              {formattedDueDate}
+        </td>}
+        <td style={{
+          textAlign: "right"
+        }}>
+          {formattedStartDueComplete}{" "}
+          {todo.completed_date 
+            ? <b style={{ fontSize: "80%"}}>
+            ({format(parseISO(todo.start_date), "d MMM")} - {format(parseISO(todo.completed_date), "d MMM")})
+          </b>
+            :<b style={{ fontSize: "80%", color: isOverdue ? "#d15c38" : "white" }}>
+              ({format(parseISO(todo.start_date), "d MMM")} - {format(parseISO(todo.due_date), "d MMM")})
             </b>
           }
         </td>
@@ -206,15 +210,15 @@ export const Todos = ({
           textAlign: "right"
         }}>
           {todo.completed_date
-            ? format(parseISO(todo.completed_date), "d MMM yy")
+            ? <span>Earned ${todo.reward}</span>
             : (todo.start_date && parseISO(todo.start_date) < new Date())
-              ? <Button className="py-0"
+              ? <Button  className="py-0"
                 variant="success"
                 onClick={() => completeTodo(todo)}
               >
                 Done
               </Button>
-              : <Button
+              : <Button className="py-0"
                 variant="success"
                 onClick={() => startTodo(todo)}
               >
@@ -239,7 +243,7 @@ export const Todos = ({
       )}
       <Row className="my-4" >
         <Col xs="auto">
-          <Button onClick={() => setEditingTodo({ project: selectedProjectId })}>
+          <Button onClick={() => setEditingTodo({ project: selectedProjectId, tags: selectedTags })}>
             New todo
           </Button>
         </Col>
@@ -249,6 +253,7 @@ export const Todos = ({
             name="tags"
             placeholder="All Tags"
             isMulti
+            isSearchable={false}
             styles={selectStyles}
             options={tags.map((tag) => ({ value: tag.id, label: tag.title }))}
             onChange={(e) => { setSelectedTags(e.map((tag) => tag.value)) }}
@@ -259,6 +264,7 @@ export const Todos = ({
             name="projects"
             placeholder="All Projects"
             isClearable
+            isSearchable={false}
             styles={selectStyles}
             options={
               filteredProjects
@@ -302,7 +308,7 @@ export const Todos = ({
             className={activeTodoStatus == "Starting" ? "active" : ""}
             onClick={() => setActiveTodoStatus('Starting')}
           >
-            To Start ({startingTodos.length})
+            Pending ({startingTodos.length})
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
@@ -310,7 +316,7 @@ export const Todos = ({
             className={activeTodoStatus == "Doing" ? "active" : ""}
             onClick={() => setActiveTodoStatus('Doing')}
           >
-            In Prog ({doingTodos.length})
+            WIP ({doingTodos.length})
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
@@ -324,17 +330,14 @@ export const Todos = ({
       </Nav>
       <Table hover responsive="md" variant="dark">
         <thead>
-          <tr>
-            <th>Todos</th>
-            <th>Start</th>
-            <th>Due</th>
-            {activeTodoStatus == "Done"
-              ? <th>Done</th>
-              : <th style={{
-                textAlign: "right"
-              }}>To</th>
+            {activeTodoStatus == "Planning" 
+              ? <tr><th>Todo</th><th>Effort</th><th></th><th></th></tr>
+              : activeTodoStatus == "Starting" 
+                ? <tr><th>Todo</th><th>Effort</th><th style={{textAlign: "right"}}>Start</th><th></th></tr>
+                : activeTodoStatus == "Doing" 
+                ? <tr><th>Todo</th><th>Effort</th><th style={{textAlign: "right"}}>Due</th><th></th></tr>
+                : <tr><th>Todo</th><th style={{textAlign: "right"}}>Done</th><th></th></tr>
             }
-          </tr>
         </thead>
         <tbody>
           {records}

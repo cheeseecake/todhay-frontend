@@ -52,12 +52,6 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.streak {
-  font-size: 90%;
-  font-weight: bold;
-  font-style: italic;
-}
-
 .subtitle {
   font-size: 80%;
   color: #85aff8;
@@ -79,8 +73,6 @@ body {
   max-width: 500px;
   text-align: left;
 }
-
-
 
 .progress {
   margin-top: 10px;

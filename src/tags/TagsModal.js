@@ -53,7 +53,7 @@ export const TagsModal = ({ setTag, tag, refreshTags }) => {
       <Modal.Body>
         <Form>
           <Row>
-            <Col md={8}>
+            <Col xs={8}>
               <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control
@@ -65,7 +65,7 @@ export const TagsModal = ({ setTag, tag, refreshTags }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col xs={4}>
               <Form.Group>
                 <Form.Label>Topic</Form.Label>
                 <Form.Select
