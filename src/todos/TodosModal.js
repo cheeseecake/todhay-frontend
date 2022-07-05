@@ -9,70 +9,87 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#16191c', color: "white" }),
-  multiValueLabel: (styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
-  multiValueRemove:(styles) => ({...styles, backgroundColor: '#2a2c30', color: 'white'}),
+  control: (styles) => ({
+    ...styles,
+    backgroundColor: "#16191c",
+    color: "white",
+  }),
+  multiValueLabel: (styles) => ({
+    ...styles,
+    backgroundColor: "#2a2c30",
+    color: "white",
+  }),
+  multiValueRemove: (styles) => ({
+    ...styles,
+    backgroundColor: "#2a2c30",
+    color: "white",
+  }),
   option: (styles, { isFocused, isSelected, isDisabled }) => {
     return {
       ...styles,
       backgroundColor: isFocused
-        ? '#52525E'
+        ? "#52525E"
         : isSelected
-          ? '#000000'
-          : '#16191c',
-      color: isDisabled 
-      ? "black":
-      "white",
-    }
-  }
+        ? "#000000"
+        : "#16191c",
+      color: isDisabled ? "black" : "white",
+    };
+  },
 };
 
-const todoSchema = yup.object({
-  title: yup.string().required(),
-  description: yup.string(),
-  project: yup.string(),
-  tags: yup.array().transform((v) => v.map((t) => t.value)),
-  effort: yup.number(),
-  reward: yup.number(),
-  frequency: yup.string()
-    .nullable()
-    .transform(v => (v === "" ? null : v)),
-  end_date: yup.string()
-    .nullable()
-    .transform(v => (v === "" ? null : v)),
-  current_streak: yup.number(),
-  max_streak: yup.number(),
-  start_date: yup
-    .string()
-    .nullable()
-    .when("completed_date", {
-      // Require start_date if there is a completed_date
-      is: (v) => !!v,
-      then: yup
-        .string()
-        .nullable()
-        .required("Start date is required if completed date is specified"),
-    })
-    .transform((v) => v || null),
-  due_date: yup
-    .string()
-    .nullable()
-    .transform((v) => v || null),
-  completed_date: yup
-    .string()
-    .nullable()
-    .transform((v) => v || null)
-    .test(
-      "invalid_date",
-      "Completed date must not be before start date",
-      (v, ctx) =>
-        !v ||
-        parseISO(v) >= parseISO(ctx.parent.start_date)
-    )
-}).required();
+const todoSchema = yup
+  .object({
+    title: yup.string().required(),
+    description: yup.string(),
+    project: yup.string(),
+    tags: yup.array().transform((v) => v.map((t) => t.value)),
+    effort: yup.number(),
+    reward: yup.number(),
+    frequency: yup
+      .string()
+      .nullable()
+      .transform((v) => (v === "" ? null : v)),
+    end_date: yup
+      .string()
+      .nullable()
+      .transform((v) => (v === "" ? null : v)),
+    current_streak: yup.number(),
+    max_streak: yup.number(),
+    start_date: yup
+      .string()
+      .nullable()
+      .when("completed_date", {
+        // Require start_date if there is a completed_date
+        is: (v) => !!v,
+        then: yup
+          .string()
+          .nullable()
+          .required("Start date is required if completed date is specified"),
+      })
+      .transform((v) => v || null),
+    due_date: yup
+      .string()
+      .nullable()
+      .transform((v) => v || null),
+    completed_date: yup
+      .string()
+      .nullable()
+      .transform((v) => v || null)
+      .test(
+        "invalid_date",
+        "Completed date must not be before start date",
+        (v, ctx) => !v || parseISO(v) >= parseISO(ctx.parent.start_date)
+      ),
+  })
+  .required();
 
 export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
-  const { control, register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: yupResolver(todoSchema),
     defaultValues: {
       title: todo?.title,
@@ -82,22 +99,25 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
         .filter((tag) => todo.tags?.includes(tag.id))
         .map((tag) => ({ value: tag.id, label: tag.title })),
       effort: todo?.effort || 0.5,
-      reward: todo?.reward || 0.5,
+      reward: todo?.reward || 5,
       frequency: todo?.frequency,
       end_date: todo?.end_date,
       start_date: todo ? todo.start_date : format(new Date(), "yyyy-MM-dd"),
       due_date: todo?.due_date,
       completed_date: todo?.completed_date,
-    }
+    },
   });
 
   const [effort, setEffort] = useState(todo?.effort || 0.5);
 
   const onSubmit = (data) => {
     const id = todo?.id;
+
     data.tags = data.project
-      ? projects.filter((project) => project.id === data.project).map(project => project.tags)
-      : data.tags
+      ? projects
+          .filter((project) => project.id === data.project)
+          .map((project) => project.tags)[0]
+      : data.tags;
     const operation = id
       ? updateType({ id, ...data }, DATA_TYPES.TODOS) // Existing todo
       : createType(data, DATA_TYPES.TODOS); // New todo
@@ -143,43 +163,40 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
             <Col xs={4}>
               <Form.Group>
                 <Form.Label>Project</Form.Label>
-                <Form.Select
-                  {...register("project")}
-                  name="project"
-                >
+                <Form.Select {...register("project")} name="project">
                   {projects.map((e) => (
                     <option key={e.id} value={e.id}>
                       {e.title}
                     </option>
                   ))}
-                </Form.Select >
+                </Form.Select>
               </Form.Group>
             </Col>
-              <Col xs={8}>
-                <Form.Group>
-                  <Form.Label>Tags</Form.Label>
-                  <Controller
-                    name="tags"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        placeholder="Tags"
-                        isSearchable={false}
-                        isMulti
-                        styles={selectStyles}
-                        options={tags.map((tag) => ({
-                          value: tag.id,
-                          label: tag.title,
-                        }))}
-                        />
-                      )}
-                      />
-                  <p className="error">{errors.tags?.message}</p>
-                </Form.Group>
-              </Col>
+            <Col xs={8}>
+              <Form.Group>
+                <Form.Label>Tags</Form.Label>
+                <Controller
+                  name="tags"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      placeholder="Tags"
+                      isSearchable={false}
+                      isMulti
+                      styles={selectStyles}
+                      options={tags.map((tag) => ({
+                        value: tag.id,
+                        label: tag.title,
+                      }))}
+                    />
+                  )}
+                />
+                <p className="error">{errors.tags?.message}</p>
+              </Form.Group>
+            </Col>
           </Row>
-          <Row >
+          <Row>
             <Col xs={3}>
               <Form.Group>
                 <Form.Label>Effort (hrs) - {effort * 60} min</Form.Label>
@@ -194,7 +211,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
             </Col>
             <Col xs={3}>
               <Form.Group>
-                <Form.Label>Reward ($) - ${effort}</Form.Label>
+                <Form.Label>Reward ($) - ${effort * 10}</Form.Label>
                 <Form.Control
                   {...register("reward")}
                   type="integer"
@@ -206,10 +223,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
             <Col xs={3}>
               <Form.Group>
                 <Form.Label>Frequency</Form.Label>
-                <Form.Select
-                  {...register("frequency")}
-                  name="frequency"
-                >
+                <Form.Select {...register("frequency")} name="frequency">
                   <option value={""}>One-time</option>
                   <option value={"DAILY"}>Daily</option>
                   <option value={"WEEKLY"}>Weekly</option>
@@ -274,8 +288,8 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
                   type="date"
                   id="completed_date"
                   name="completed_date"
-                /><p className="error">
-                  {errors.completed_date?.message}</p>
+                />
+                <p className="error">{errors.completed_date?.message}</p>
               </Form.Group>
             </Col>
           </Row>
@@ -289,6 +303,6 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
           Save
         </Button>
       </Modal.Footer>
-    </Modal >
+    </Modal>
   );
 };

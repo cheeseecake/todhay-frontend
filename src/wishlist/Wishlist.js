@@ -98,7 +98,7 @@ export const Wishlist = ({ totalRewards, refreshWishlist, wishlist }) => {
                   <ProgressBar variant="success" now={100 * (availableRewards / wish.cost)} />
                 </OverlayTrigger>
               )}
-            {" "}${wish.cost}
+            {" "}${parseFloat(wish.cost).toFixed(1)}
           </Card.Footer>
         </Card>
       </Col >

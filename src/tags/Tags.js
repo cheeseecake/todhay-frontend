@@ -38,25 +38,31 @@ export const Tags = ({ tags, projects, todos, refreshTags, viewProjectsFromTags,
           <Card.Body>
             <Card.Header as="h5">{tag.title}</Card.Header>
             <Card.Text>
-              <FcMoneyTransfer /> ${totalRewards.toFixed(1)}{" "}
-              <FcClock /> {totalEffort.toFixed(1)} hrs
-            </Card.Text>
-            <Row>
-              <Col>
+              <Row><Col>
+                <Button disabled className = "my-1" variant="dark" style={{ width: "100%" }} >
+                <FcMoneyTransfer /> ${totalRewards.toFixed(1)}
+                  </Button>
+                  </Col><Col>
+                  <Button disabled className = "my-1"  variant="dark" style={{ width: "100%" }} >
+                  <FcClock /> {totalEffort.toFixed(1)} hrs
+                  </Button>
+                  </Col>
+                  </Row>
+                  <Row><Col>
                 {numTodos > 0 &&
-                  <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewTodosFromTags(tag.id)}>
+                  <Button className = "my-1"  variant="outline-light" style={{ width: "100%" }} onClick={() => viewTodosFromTags(tag.id)}>
                     {numTodos} Todo{numTodos !== 1 && 's'}
                   </Button>
                 }
-              </Col>
-              <Col>
+                </Col><Col>
                 {numProjects > 0 &&
-                  <Button variant="outline-light" style={{ width: "100%" }} onClick={() => viewProjectsFromTags(tag.id)}>
+                  <Button className = "my-1" variant="outline-light" style={{ width: "100%" }} onClick={() => viewProjectsFromTags(tag.id)}>
                     {numProjects} Project{numProjects !== 1 && 's'}
                   </Button>
                 }
-              </Col>
-            </Row>
+                  </Col>
+                  </Row>
+                </Card.Text>
           </Card.Body>
         </Card>
       </Col>
