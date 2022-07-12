@@ -11,7 +11,6 @@ import { Wishlist } from "./wishlist/Wishlist";
 
 export const API_ROOT = "https://api.fisheecake.com";
 
-
 /* Enum of data types and their display values 
 This allows us to reference them as DATA_TYPES.[type],
 which prevents errors from typos happening further down.*/
@@ -19,6 +18,10 @@ export const DATA_TYPES = {
   TODOS: {
     displayName: "Todos",
     apiName: "todos",
+  },
+  DONETODOS: {
+    displayName: "Todos",
+    apiName: "donetodos",
   },
   PROJECTS: {
     displayName: "Projects",
@@ -35,7 +38,6 @@ export const DATA_TYPES = {
 };
 
 export const App = () => {
-
   const [activeDataType, setActiveDataType] = useState(
     DATA_TYPES.TODOS.displayName
   );
@@ -43,9 +45,10 @@ export const App = () => {
   const [tags, setTags] = useState([]);
   const [projects, setProjects] = useState([]);
   const [todos, setTodos] = useState([]);
+  const [doneTodos, setDoneTodos] = useState([]);
   const [wishlist, setWishlist] = useState([]);
 
-  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
 
   const [loggingIn, setLoggingIn] = useState();
@@ -59,9 +62,13 @@ export const App = () => {
     () => void getType(DATA_TYPES.PROJECTS).then((json) => setProjects(json)),
     []
   );
-
   const refreshTodos = useCallback(
     () => void getType(DATA_TYPES.TODOS).then((json) => setTodos(json)),
+    []
+  );
+
+  const refreshDoneTodos = useCallback(
+    () => void getType(DATA_TYPES.DONETODOS).then((json) => setDoneTodos(json)),
     []
   );
 
@@ -71,19 +78,19 @@ export const App = () => {
   );
 
   const onLogout = () =>
-    getLogout()
-      .then(() => {
-        setTags([]);
-        setProjects([]);
-        setTodos([]);
-        setWishlist([]);
-      })
+    getLogout().then(() => {
+      setTags([]);
+      setProjects([]);
+      setTodos([]);
+      setWishlist([]);
+    });
 
   useEffect(() => {
     getCSRF();
     refreshTags();
     refreshProjects();
     refreshTodos();
+    refreshDoneTodos();
     refreshWishlist();
   }, []);
 
@@ -120,13 +127,15 @@ export const App = () => {
     [DATA_TYPES.TODOS.displayName]: (
       <Todos
         todos={todos}
+        doneTodos={doneTodos}
+        refreshTodos={refreshTodos}
+        refreshDoneTodos={refreshDoneTodos}
         projects={projects}
         tags={tags}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
         selectedProjectId={selectedProjectId}
         setSelectedProjectId={setSelectedProjectId}
-        refreshTodos={refreshTodos}
       />
     ),
 
@@ -160,11 +169,9 @@ export const App = () => {
           refreshTodos={refreshTodos}
           refreshTags={refreshTags}
           setLoggingIn={setLoggingIn}
-        />)}
-      <Navbar
-        bg="dark"
-        variant="dark"
-      >
+        />
+      )}
+      <Navbar bg="dark" variant="dark">
         <Container>
           <Nav variant="tabs" className="me-auto">
             <Nav.Link
@@ -199,22 +206,21 @@ export const App = () => {
           <Navbar.Text
             style={{ color: "white" }}
             className="justify-content-end"
-          >{todos.length > 0 ?
-            <Button variant="outline-light" onClick={onLogout} >
-              Logout
-            </Button >
-            :
-            <Button onClick={() => setLoggingIn(true)} >
-              Login
-            </Button>
-            }
+          >
+            {todos.length > 0 ? (
+              <Button variant="outline-light" onClick={onLogout}>
+                Logout
+              </Button>
+            ) : (
+              <Button onClick={() => setLoggingIn(true)}>Login</Button>
+            )}
           </Navbar.Text>
         </Container>
-      </Navbar >
+      </Navbar>
       <Container>
         {/* We display the appropriate view based on activeDataType*/}
         {views[activeDataType]}
-      </Container >
-    </div >
+      </Container>
+    </div>
   );
 };

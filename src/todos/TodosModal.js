@@ -83,7 +83,7 @@ const todoSchema = yup
   })
   .required();
 
-export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
+export const TodosModal = ({ projects, tags, refreshTodos, refreshDoneTodos, setTodo, todo }) => {
   const {
     control,
     register,
@@ -125,6 +125,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, setTodo, todo }) => {
     operation
       .then(() => {
         refreshTodos();
+        refreshDoneTodos();
         setTodo(null);
       })
       .catch(alert);

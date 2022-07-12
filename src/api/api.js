@@ -5,14 +5,15 @@ function getCookie(name) {
   if (!document.cookie) {
     return null;
   }
-  const xsrfCookies = document.cookie.split(';')
-    .map(c => c.trim())
-    .filter(c => c.startsWith(name + '='));
+  const xsrfCookies = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .filter((c) => c.startsWith(name + "="));
 
   if (xsrfCookies.length === 0) {
     return null;
   }
-  return decodeURIComponent(xsrfCookies[0].split('=')[1]);
+  return decodeURIComponent(xsrfCookies[0].split("=")[1]);
 }
 
 const fetchWithErrorHandling = (url, args) =>
@@ -20,7 +21,7 @@ const fetchWithErrorHandling = (url, args) =>
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      'X-Csrftoken': getCookie("csrftoken")
+      "X-Csrftoken": getCookie("csrftoken"),
     },
     ...args,
   }).then(async (r) => {
@@ -35,20 +36,18 @@ const fetchWithErrorHandling = (url, args) =>
       throw new Error(JSON.stringify(json, undefined, 2));
     }
   });
-export const getCSRF = () =>
-  fetchWithErrorHandling(`${API_ROOT}/set-csrf`);
+export const getCSRF = () => fetchWithErrorHandling(`${API_ROOT}/set-csrf`);
 
 export const getLogin = (credentials) =>
   fetchWithErrorHandling(`${API_ROOT}/login`, {
     method: "POST",
     body: JSON.stringify(credentials),
-  })
+  });
 
-export const getLogout = () =>
-  fetchWithErrorHandling(`${API_ROOT}/logout`);
+export const getLogout = () => fetchWithErrorHandling(`${API_ROOT}/logout`);
 
-export const getType = (type) =>
-  fetchWithErrorHandling(`${API_ROOT}/${type.apiName}`);
+export const getType = (type, queryparams = "") =>
+  fetchWithErrorHandling(`${API_ROOT}/${type.apiName}${queryparams}`);
 
 export const createType = (item, type) =>
   fetchWithErrorHandling(`${API_ROOT}/${type.apiName}`, {

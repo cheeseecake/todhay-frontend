@@ -9,8 +9,6 @@ import {
   Table,
   Row,
   Col,
-  OverlayTrigger,
-  Tooltip,
   Pagination,
 } from "react-bootstrap";
 import { patchType } from "../api/api";
@@ -48,27 +46,33 @@ const selectStyles = {
 };
 export const Todos = ({
   todos,
+  doneTodos,
   projects,
   tags,
   selectedTags,
   setSelectedTags,
   selectedProjectId,
   setSelectedProjectId,
+  refreshDoneTodos,
   refreshTodos,
 }) => {
   const [editingTodo, setEditingTodo] = useState();
-  const [activeTodoStatus, setActiveTodoStatus] = useState("Doing");
-  const [currentPage, setCurrentPage] = useState(0);
+  const [activeTodoStatus, setActiveTodoStatus] = useState("WIP");
+  const [currentPage, setCurrentPage] = useState(1);
+  const setPage = (index) => setCurrentPage(index);
 
-  /* Always refetch todos when this view is first mounted */
-  useEffect(() => refreshTodos(), [refreshTodos]);
+  /* Always refetch todos on mount */
+  useEffect(() => refreshTodos(), []);
 
   const completeTodo = (todo) =>
     new Date().getDate() >= new Date(todo.start_date).getDate()
       ? patchType(
           { ...todo, completed_date: format(new Date(), "yyyy-MM-dd") },
           DATA_TYPES.TODOS
-        ).then(refreshTodos)
+        ).then(() => {
+          refreshTodos();
+          refreshDoneTodos();
+        })
       : window.alert(
           `Completed date cannot be before start date. Please edit start/completed date.`
         );
@@ -106,11 +110,14 @@ export const Todos = ({
       new Date(a.due_date) - new Date(b.due_date) ||
       new Date(a.start_date) - new Date(b.start_date)
   );
+  let filteredDoneTodos = selectedProjectId
+    ? doneTodos.filter((todo) => todo.project === selectedProjectId)
+    : selectedTags.length > 0
+    ? doneTodos.filter((todo) =>
+        todo.tags.some((tag) => selectedTags.includes(tag))
+      )
+    : doneTodos;
 
-  let doneTodos = filteredTodos.filter(
-    // completed
-    (todo) => todo.completed_date
-  );
   let doingTodos = filteredTodos.filter(
     (todo) =>
       // not completed AND
@@ -142,30 +149,24 @@ export const Todos = ({
     (acc, todo) => acc + parseFloat(todo.reward),
     0
   );
-  const earnedRewards = doneTodos.reduce(
+  const earnedRewards = filteredDoneTodos.reduce(
     (acc, todo) => acc + parseFloat(todo.reward),
     0
   );
-
   const filteredStatusTodos = {
-    Planning: planningTodos,
+    KIV: planningTodos,
     Starting: startingTodos,
-    Doing: doingTodos,
-    Done: doneTodos,
+    WIP: doingTodos,
+    Done: filteredDoneTodos,
   };
 
-  const pageSize = 50;
+  const pageSize = 20;
   let pageCount = Math.ceil(
     filteredStatusTodos[activeTodoStatus].length / pageSize
   );
-  if (currentPage > pageCount) {
-    setCurrentPage(0);
-  }
-
-  const setPage = (e, index) => setCurrentPage(index);
 
   const records = filteredStatusTodos[activeTodoStatus]
-    .slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
     .map((todo) => {
       const formattedStartDueComplete = todo.completed_date
         ? formatDistanceStrict(
@@ -202,22 +203,13 @@ export const Todos = ({
               cursor: "pointer",
             }}
           >
-            <OverlayTrigger
-              placement="right-start"
-              overlay={
-                <Tooltip id={todo.id} className="tooltip">
-                  {todo.description.slice(0, 500)}...
-                </Tooltip>
-              }
-            >
-              <span>{todo.title} </span>
-            </OverlayTrigger>
             <span className="subtitle">
               {projects.find((project) => project.id === todo.project)?.title}{" "}
             </span>
+            <span>{todo.title} </span>
             {todo.frequency && (
               <Badge bg="dark" text="light">
-                {todo.frequency}
+                ({todo.frequency})
               </Badge>
             )}
           </td>
@@ -244,12 +236,20 @@ export const Todos = ({
             <b
               style={{
                 fontSize: "80%",
-                color: isOverdue ? "#d15c38" : "white",
+                color: isOverdue && !todo.completed_date ? "#d15c38" : "white",
               }}
             >
-              {formattedStartDueComplete}{" "}
+              {formattedStartDueComplete != "0 days" &&
+                formattedStartDueComplete}{" "}
             </b>
-            {todo.completed_date && (
+            {!todo.completed_date ? (
+              ""
+            ) : format(parseISO(todo.start_date), "d MMM") ==
+              format(parseISO(todo.completed_date), "d MMM") ? (
+              <b style={{ fontSize: "80%" }}>
+                {format(parseISO(todo.completed_date), "d MMM")}
+              </b>
+            ) : (
               <b style={{ fontSize: "80%" }}>
                 ({format(parseISO(todo.start_date), "d MMM")} -{" "}
                 {format(parseISO(todo.completed_date), "d MMM")})
@@ -291,6 +291,7 @@ export const Todos = ({
         <TodosModal
           projects={projects}
           refreshTodos={refreshTodos}
+          refreshDoneTodos={refreshDoneTodos}
           setTodo={setEditingTodo}
           todo={editingTodo}
           tags={tags}
@@ -367,8 +368,11 @@ export const Todos = ({
       <Nav fill variant="tabs">
         <Nav.Item>
           <Nav.Link
-            className={activeTodoStatus == "Planning" ? "active" : ""}
-            onClick={() => setActiveTodoStatus("Planning")}
+            className={activeTodoStatus == "KIV" ? "active" : ""}
+            onClick={() => {
+              setActiveTodoStatus("KIV");
+              setPage(1);
+            }}
           >
             KIV ({planningTodos.length})
           </Nav.Link>
@@ -376,15 +380,21 @@ export const Todos = ({
         <Nav.Item>
           <Nav.Link
             className={activeTodoStatus == "Starting" ? "active" : ""}
-            onClick={() => setActiveTodoStatus("Starting")}
+            onClick={() => {
+              setActiveTodoStatus("Starting");
+              setPage(1);
+            }}
           >
-            Pending ({startingTodos.length})
+            Starting ({startingTodos.length})
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
           <Nav.Link
-            className={activeTodoStatus == "Doing" ? "active" : ""}
-            onClick={() => setActiveTodoStatus("Doing")}
+            className={activeTodoStatus == "WIP" ? "active" : ""}
+            onClick={() => {
+              setActiveTodoStatus("WIP");
+              setPage(1);
+            }}
           >
             WIP ({doingTodos.length})
           </Nav.Link>
@@ -392,15 +402,18 @@ export const Todos = ({
         <Nav.Item>
           <Nav.Link
             className={activeTodoStatus == "Done" ? "active" : ""}
-            onClick={() => setActiveTodoStatus("Done")}
+            onClick={() => {
+              setActiveTodoStatus("Done");
+              setPage(1);
+            }}
           >
-            Done ({doneTodos.length})
+            Done ({filteredDoneTodos.length})
           </Nav.Link>
         </Nav.Item>
       </Nav>
       <Table hover responsive="md" variant="dark">
         <thead>
-          {activeTodoStatus == "Planning" ? (
+          {activeTodoStatus == "KIV" ? (
             <tr>
               <th>Todo</th>
               <th>Effort</th>
@@ -414,7 +427,7 @@ export const Todos = ({
               <th style={{ textAlign: "right" }}>Start</th>
               <th></th>
             </tr>
-          ) : activeTodoStatus == "Doing" ? (
+          ) : activeTodoStatus == "WIP" ? (
             <tr>
               <th>Todo</th>
               <th>Effort</th>
@@ -431,21 +444,52 @@ export const Todos = ({
         </thead>
         <tbody>{records}</tbody>
       </Table>
-      <Pagination>
-        <Pagination.First />
-        <Pagination.Prev />
-        {[...Array(pageCount)].map((page, i) => (
-          <Pagination.Item
-            active={i === currentPage}
-            key={i}
-            onClick={(e) => setPage(e, i)}
-          >
-            {i + 1}
+      {pageCount > 1 && (
+        <Pagination>
+          {currentPage > 1 && (
+            <Pagination.Item key={1} onClick={() => setPage(1)}>
+              {1}
+            </Pagination.Item>
+          )}
+          {currentPage > 3 && (
+            <Pagination.Ellipsis
+              onClick={() => setPage(Math.ceil(currentPage / 2))}
+            />
+          )}
+          {currentPage > 2 && (
+            <Pagination.Item
+              key={currentPage - 1}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              {currentPage - 1}
+            </Pagination.Item>
+          )}
+          <Pagination.Item active key={currentPage}>
+            {currentPage}
           </Pagination.Item>
-        ))}
-        <Pagination.Next />
-        <Pagination.Last />
-      </Pagination>
+          {currentPage < pageCount - 2 && (
+            <Pagination.Item
+              key={currentPage + 1}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              {currentPage + 1}
+            </Pagination.Item>
+          )}
+          {currentPage < pageCount - 2 && (
+            <Pagination.Ellipsis
+              onClick={() =>
+                setPage(currentPage + Math.ceil((pageCount - currentPage) / 2))
+              }
+            />
+          )}
+
+          {currentPage < pageCount && (
+            <Pagination.Item key={pageCount} onClick={() => setPage(pageCount)}>
+              {pageCount}
+            </Pagination.Item>
+          )}
+        </Pagination>
+      )}
     </>
   );
 };
