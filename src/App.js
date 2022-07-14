@@ -21,7 +21,7 @@ export const DATA_TYPES = {
   },
   DONETODOS: {
     displayName: "Todos",
-    apiName: "donetodos",
+    apiName: "todos?status=done",
   },
   PROJECTS: {
     displayName: "Projects",
@@ -46,6 +46,7 @@ export const App = () => {
   const [projects, setProjects] = useState([]);
   const [todos, setTodos] = useState([]);
   const [doneTodos, setDoneTodos] = useState([]);
+  const [allTodos, setAllTodos] = useState([]);
   const [wishlist, setWishlist] = useState([]);
 
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -76,6 +77,8 @@ export const App = () => {
     () => void getType(DATA_TYPES.WISHLIST).then((json) => setWishlist(json)),
     []
   );
+
+  useEffect(() => setAllTodos(todos.concat(doneTodos)), [todos, doneTodos]);
 
   const onLogout = () =>
     getLogout().then(() => {
@@ -108,16 +111,17 @@ export const App = () => {
   };
   // totalRewards and claimedRewards will be recalculated every render
   // It's not expensive, hence they're not memoized
-  const totalRewards = todos
-    .filter((todo) => !!todo.completed_date)
-    .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
+  const totalRewards = doneTodos.reduce(
+    (acc, todo) => acc + parseFloat(todo.reward),
+    0
+  );
 
   const views = {
     [DATA_TYPES.TAGS.displayName]: (
       <Tags
         tags={tags}
         projects={projects}
-        todos={todos}
+        todos={allTodos}
         refreshTags={refreshTags}
         viewTodosFromTags={viewTodosFromTags}
         viewProjectsFromTags={viewProjectsFromTags}
@@ -143,7 +147,7 @@ export const App = () => {
       <Projects
         projects={projects}
         tags={tags}
-        todos={todos}
+        todos={allTodos}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
         refreshProjects={refreshProjects}
