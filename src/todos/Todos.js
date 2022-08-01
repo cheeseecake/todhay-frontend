@@ -46,14 +46,14 @@ const selectStyles = {
 };
 export const Todos = ({
   todos,
-  doneTodos,
+  todoTodos,
   projects,
   tags,
   selectedTags,
   setSelectedTags,
   selectedProjectId,
   setSelectedProjectId,
-  refreshDoneTodos,
+  refreshTodoTodos,
   refreshTodos,
 }) => {
   const [editingTodo, setEditingTodo] = useState();
@@ -70,8 +70,11 @@ export const Todos = ({
           { ...todo, completed_date: format(new Date(), "yyyy-MM-dd") },
           DATA_TYPES.TODOS
         ).then(() => {
+          setTimeout(() => {
+            alert("Done!");
+          }, 1000);
           refreshTodos();
-          refreshDoneTodos();
+          refreshTodoTodos();
         })
       : window.alert(
           `Completed date cannot be before start date. Please edit start/completed date.`
@@ -96,12 +99,12 @@ export const Todos = ({
   // or if no selected project, filter todos based on selected tags
   // else show all todos
   let filteredTodos = selectedProjectId
-    ? todos.filter((todo) => todo.project === selectedProjectId)
+    ? todoTodos.filter((todo) => todo.project === selectedProjectId)
     : selectedTags.length > 0
-    ? todos.filter((todo) =>
+    ? todoTodos.filter((todo) =>
         todo.tags.some((tag) => selectedTags.includes(tag))
       )
-    : todos;
+    : todoTodos;
 
   // Sort todos based on descending completed_date, ascending due_date and start_date
   filteredTodos = filteredTodos.sort(
@@ -110,6 +113,7 @@ export const Todos = ({
       new Date(a.due_date) - new Date(b.due_date) ||
       new Date(a.start_date) - new Date(b.start_date)
   );
+  let doneTodos = todos.filter((todo) => todo.completed_date);
   let filteredDoneTodos = selectedProjectId
     ? doneTodos.filter((todo) => todo.project === selectedProjectId)
     : selectedTags.length > 0
@@ -145,14 +149,15 @@ export const Todos = ({
     (todo) => !todo.completed_date && !todo.start_date && !todo.due_date
   );
 
-  const totalRewards = filteredTodos.reduce(
-    (acc, todo) => acc + parseFloat(todo.reward),
-    0
-  );
   const earnedRewards = filteredDoneTodos.reduce(
     (acc, todo) => acc + parseFloat(todo.reward),
     0
   );
+  const toEarnRewards =
+    planningTodos.reduce((acc, todo) => acc + parseFloat(todo.reward), 0) +
+    startingTodos.reduce((acc, todo) => acc + parseFloat(todo.reward), 0) +
+    doingTodos.reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
+
   const filteredStatusTodos = {
     KIV: planningTodos,
     Starting: startingTodos,
@@ -244,15 +249,9 @@ export const Todos = ({
             </b>
             {!todo.completed_date ? (
               ""
-            ) : format(parseISO(todo.start_date), "d MMM") ==
-              format(parseISO(todo.completed_date), "d MMM") ? (
+            ) :  (
               <b style={{ fontSize: "80%" }}>
                 {format(parseISO(todo.completed_date), "d MMM")}
-              </b>
-            ) : (
-              <b style={{ fontSize: "80%" }}>
-                ({format(parseISO(todo.start_date), "d MMM")} -{" "}
-                {format(parseISO(todo.completed_date), "d MMM")})
               </b>
             )}
           </td>
@@ -267,7 +266,9 @@ export const Todos = ({
               <Button
                 className="py-0"
                 variant="success"
-                onClick={() => completeTodo(todo)}
+                onClick={() => {
+                  completeTodo(todo);
+                }}
               >
                 Done
               </Button>
@@ -275,7 +276,9 @@ export const Todos = ({
               <Button
                 className="py-0"
                 variant="success"
-                onClick={() => startTodo(todo)}
+                onClick={() => {
+                  startTodo(todo);
+                }}
               >
                 Start
               </Button>
@@ -291,7 +294,7 @@ export const Todos = ({
         <TodosModal
           projects={projects}
           refreshTodos={refreshTodos}
-          refreshDoneTodos={refreshDoneTodos}
+          refreshTodoTodos={refreshTodoTodos}
           setTodo={setEditingTodo}
           todo={editingTodo}
           tags={tags}
@@ -355,12 +358,12 @@ export const Todos = ({
       <ProgressBar className="my-4">
         <ProgressBar
           variant="success"
-          now={100 * (1 - earnedRewards / totalRewards) + 1}
-          label={`$${(totalRewards - earnedRewards).toFixed(1)} to earn`}
+          now={100 * (toEarnRewards / (toEarnRewards + earnedRewards)) + 1}
+          label={`$${toEarnRewards.toFixed(1)} to earn`}
         />
         <ProgressBar
           style={{ backgroundColor: "#064b35" }}
-          now={100 * (earnedRewards / totalRewards)}
+          now={100 * (earnedRewards / (toEarnRewards + earnedRewards))}
           label={`$${earnedRewards.toFixed(1)} earned`}
           key={2}
         />

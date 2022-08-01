@@ -83,7 +83,14 @@ const todoSchema = yup
   })
   .required();
 
-export const TodosModal = ({ projects, tags, refreshTodos, refreshDoneTodos, setTodo, todo }) => {
+export const TodosModal = ({
+  projects,
+  tags,
+  refreshTodos,
+  refreshTodoTodos,
+  setTodo,
+  todo
+}) => {
   const {
     control,
     register,
@@ -94,7 +101,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, refreshDoneTodos, set
     defaultValues: {
       title: todo?.title,
       description: todo?.description,
-      project: todo?.project,
+      project: todo?.project || "37975118-b68a-4fcd-9fc6-43cad1f39b1d",
       tags: tags
         .filter((tag) => todo.tags?.includes(tag.id))
         .map((tag) => ({ value: tag.id, label: tag.title })),
@@ -112,21 +119,26 @@ export const TodosModal = ({ projects, tags, refreshTodos, refreshDoneTodos, set
 
   const onSubmit = (data) => {
     const id = todo?.id;
+    console.log(data);
 
-    data.tags = data.project
-      ? projects
-          .filter((project) => project.id === data.project)
-          .map((project) => project.tags)[0]
-      : data.tags;
+    data.tags =
+      data.project !== "37975118-b68a-4fcd-9fc6-43cad1f39b1d"
+        ? projects
+            .filter((project) => project.id === data.project)
+            .map((project) => project.tags)[0]
+        : data.tags;
     const operation = id
       ? updateType({ id, ...data }, DATA_TYPES.TODOS) // Existing todo
       : createType(data, DATA_TYPES.TODOS); // New todo
 
     operation
       .then(() => {
+        refreshTodoTodos();
         refreshTodos();
-        refreshDoneTodos();
         setTodo(null);
+        setTimeout(() => {
+          alert("Saved!");
+        }, 1000);
       })
       .catch(alert);
   };
@@ -134,6 +146,7 @@ export const TodosModal = ({ projects, tags, refreshTodos, refreshDoneTodos, set
   const onDelete = () =>
     window.confirm(`Delete '${todo.title}?'`) &&
     deleteType(todo, DATA_TYPES.TODOS).then(() => {
+      refreshTodoTodos();
       refreshTodos();
       setTodo(null);
     });

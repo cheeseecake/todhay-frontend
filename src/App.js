@@ -19,9 +19,9 @@ export const DATA_TYPES = {
     displayName: "Todos",
     apiName: "todos",
   },
-  DONETODOS: {
+  TODOTODOS: {
     displayName: "Todos",
-    apiName: "todos?status=done",
+    apiName: "todos?wip=true",
   },
   PROJECTS: {
     displayName: "Projects",
@@ -45,8 +45,7 @@ export const App = () => {
   const [tags, setTags] = useState([]);
   const [projects, setProjects] = useState([]);
   const [todos, setTodos] = useState([]);
-  const [doneTodos, setDoneTodos] = useState([]);
-  const [allTodos, setAllTodos] = useState([]);
+  const [todoTodos, setTodoTodos] = useState([]);
   const [wishlist, setWishlist] = useState([]);
 
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -68,8 +67,8 @@ export const App = () => {
     []
   );
 
-  const refreshDoneTodos = useCallback(
-    () => void getType(DATA_TYPES.DONETODOS).then((json) => setDoneTodos(json)),
+  const refreshTodoTodos = useCallback(
+    () => void getType(DATA_TYPES.TODOTODOS).then((json) => setTodoTodos(json)),
     []
   );
 
@@ -77,8 +76,6 @@ export const App = () => {
     () => void getType(DATA_TYPES.WISHLIST).then((json) => setWishlist(json)),
     []
   );
-
-  useEffect(() => setAllTodos(todos.concat(doneTodos)), [todos, doneTodos]);
 
   const onLogout = () =>
     getLogout().then(() => {
@@ -93,7 +90,7 @@ export const App = () => {
     refreshTags();
     refreshProjects();
     refreshTodos();
-    refreshDoneTodos();
+    refreshTodoTodos();
     refreshWishlist();
   }, []);
 
@@ -111,17 +108,16 @@ export const App = () => {
   };
   // totalRewards and claimedRewards will be recalculated every render
   // It's not expensive, hence they're not memoized
-  const totalRewards = doneTodos.reduce(
-    (acc, todo) => acc + parseFloat(todo.reward),
-    0
-  );
+  const totalRewards = todos
+    .filter((todo) => todo.completed_date)
+    .reduce((acc, todo) => acc + parseFloat(todo.reward), 0);
 
   const views = {
     [DATA_TYPES.TAGS.displayName]: (
       <Tags
         tags={tags}
         projects={projects}
-        todos={allTodos}
+        todos={todos}
         refreshTags={refreshTags}
         viewTodosFromTags={viewTodosFromTags}
         viewProjectsFromTags={viewProjectsFromTags}
@@ -131,9 +127,9 @@ export const App = () => {
     [DATA_TYPES.TODOS.displayName]: (
       <Todos
         todos={todos}
-        doneTodos={doneTodos}
+        todoTodos={todoTodos}
         refreshTodos={refreshTodos}
-        refreshDoneTodos={refreshDoneTodos}
+        refreshTodoTodos={refreshTodoTodos}
         projects={projects}
         tags={tags}
         selectedTags={selectedTags}
@@ -147,7 +143,7 @@ export const App = () => {
       <Projects
         projects={projects}
         tags={tags}
-        todos={allTodos}
+        todos={todos}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
         refreshProjects={refreshProjects}
